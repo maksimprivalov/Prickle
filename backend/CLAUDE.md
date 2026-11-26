@@ -23,10 +23,10 @@ optional: terminal output comes first.
 **Status: scaffolded.** Workspace, configs, all dependencies, `core/money`, the runtime port
 (`runtime/port.ts`: `ToolSpec`/`defineTool`, `AgentSpec`/`defineAgent`, `Runtime`), the run log
 (`runtime/run-log.ts`, which also records `loop.started`/`loop.finished` and tool calls for the
-timing table) and the plain adapter (`runtime/plain/`) exist; `demo`,
-`eval`, `dev` and `gen:data` are stubs that exit 1. The wallets (`payments/`: port, mock, devnet,
-`select-wallet`) and `wallet:setup` are real; `pay()` waits for the guard. When a folder does not
-exist yet, create it as described here rather than inventing a different one; when reality diverges,
+timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
+(`runtime/mozaik/`, tested with a scripted model, not yet against a live LLM) exist; `demo`,
+`eval`, `dev`, `gen:data` and `wallet:setup` are stubs that exit 1. When a folder does not exist
+yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
 imports it without our path aliases.
 
@@ -169,16 +169,19 @@ agents, the guard, the sources or the eval.
 
 ## Open items
 
-- **Mozaik is 6.0.0** (published 25 Nov 2026), not the 4.x in the idea. Confirmed in its README
-  and `dist/index.d.ts`: `defineRuntime<State>()` returns `initializeRuntime`, `join`, `leave`,
-  `sendMessage`, `sendEvent`, `runLoop`, `resolveRuntime`; `RuntimeState`, `createAgent`,
-  `createHuman`, `SituationSpecification` + `SituationHandler`, `InterceptionHandler`
-  (`isSatisfiedBy` / `handle` on a transition, 4th argument of `runLoop`), `FunctionTool` (as
-  `Tool`). `runLoop` is fire-and-forget. Still to read in detail before the adapter:
-  `FunctionTool`'s fields, `InferenceInput`, `ExecutableTransition`.
-- **`initializeRuntime` throws if called twice**, so one runtime per *process*, not per
-  session. The session server needs a child process or a worker per session, or one session at a
-  time; decide before Fri 10:30.
+- **Mozaik is 6.0.0** (published 25 Nov 2026), not the 4.x in the idea. The adapter
+  (`runtime/mozaik/mozaik-runtime.ts`) is built and tested against its `dist/index.d.ts`. What it
+  relies on, read from the source:
+  - `defineRuntime()` keeps its runtime in a closure, so each call is a separate runtime: one per
+    session works. (`initializeRuntime` throws only when called twice on the *same* one.)
+  - `runLoop` returns `void`. The adapter settles each loop at the `model_message` transition
+    through its own `InterceptionHandler`, which also gates `function_call` (the guard).
+  - The loop uses `inferenceInput.context` and `inferenceInput.tools`, not the agent's memory, so
+    each loop gets a fresh context (developer message + user message) and per-loop tools.
+  - Mozaik does not catch a failed model call (the loop promise rejects unhandled). The adapter
+    wraps the inference runner so a failure ends the loop as `failed` instead.
+  - Model names per tier come from config (`models: { fast, strong }`), chosen from Mozaik's
+    `supportedModels` (e.g. `gpt-5.4-mini`, `gpt-5.5`, `claude-sonnet-5-5`).
 - **LLM key:** Mozaik picks the provider from the model name; `OPENAI_API_KEY`,
   `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` all work. **Decided: Gemini** (free key for judges);
   `.env.example` uses `GEMINI_API_KEY`. The `fast`/`strong` model tiers map to Gemini models.
