@@ -1,0 +1,1 @@
+export { Mandate } from './mandate';
