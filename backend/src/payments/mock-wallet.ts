@@ -32,6 +32,7 @@ export function createMockWallet(opening: UsdcUnits): MockWallet {
         result = {
           ok: false,
           detail: `insufficient balance: ${request.amount} base units asked, ${balance} held`,
+          maybeMoved: false,
         };
       } else {
         balance = sub(balance, request.amount);

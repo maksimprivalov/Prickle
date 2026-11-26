@@ -70,7 +70,9 @@ export async function createDevnetWallet(options: {
 
   async function send(storeId: keyof StoresFile, amount: UsdcUnits): Promise<TransferResult> {
     const address = stores[storeId];
-    if (!address) return { ok: false, detail: `no devnet address for store ${storeId}` };
+    if (!address) {
+      return { ok: false, detail: `no devnet address for store ${storeId}`, maybeMoved: false };
+    }
     try {
       const destination = await getOrCreateAssociatedTokenAccount(
         connection,
@@ -90,7 +92,9 @@ export async function createDevnetWallet(options: {
       );
       return { ok: true, signature };
     } catch (error) {
-      return { ok: false, detail: `devnet transfer failed: ${messageOf(error)}` };
+      // The transaction may have been sent before the error (a confirmation timeout), so the
+      // caller must treat the money as possibly gone.
+      return { ok: false, detail: `devnet transfer failed: ${messageOf(error)}`, maybeMoved: true };
     }
   }
 
