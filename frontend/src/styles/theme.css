@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-surface: #ffffff;
+  --color-ink: #1a1a1a;
+  --color-muted: #5c5c5c;
+  --color-pass: #146c2e;
+  --color-reject: #b3261e;
+  --color-unverified: #8a5a00;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-surface: #121212;
+    --color-ink: #f2f2f2;
+    --color-muted: #b0b0b0;
+    --color-pass: #6fdd8b;
+    --color-reject: #ffb4ab;
+    --color-unverified: #f5c26b;
+  }
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}

@@ -8,6 +8,9 @@ The full idea, design, scoring and plan are in [`prickle-idea.md`](prickle-idea.
 design document: read the section a task needs, not the whole file (`/idea <section>` in
 `backend/` prints one).
 
+Who builds what, and when: [`work-split.md`](work-split.md). It supersedes the first-proposal
+split in the idea's *Plan* section.
+
 ## Where the work lives
 
 | Folder | What | Start Claude Code here for |

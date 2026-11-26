@@ -1,0 +1,39 @@
+{
+  "name": "@prickle/backend",
+  "version": "0.0.0",
+  "private": true,
+  "license": "SEE LICENSE IN ../LICENSE",
+  "type": "module",
+  "exports": {
+    "./contracts": "./src/core/events/index.ts"
+  },
+  "scripts": {
+    "demo": "tsx src/app/cli/demo.ts",
+    "eval": "tsx src/app/cli/eval.ts",
+    "dev": "tsx watch src/app/server/main.ts",
+    "gen:data": "tsx scripts/gen-data.ts",
+    "wallet:setup": "tsx scripts/wallet-setup.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "check": "pnpm typecheck && pnpm lint && pnpm test"
+  },
+  "dependencies": {
+    "@hono/node-server": "2.1.11",
+    "@mozaik-ai/core": "6.0.0",
+    "@solana/spl-token": "0.4.15",
+    "@solana/web3.js": "1.99.0",
+    "hono": "4.13.22",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "22.20.7",
+    "eslint": "10.15.0",
+    "globals": "17.14.0",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.74.0",
+    "vitest": "5.1.2"
+  }
+}
