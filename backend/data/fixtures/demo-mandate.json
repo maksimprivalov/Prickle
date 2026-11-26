@@ -1,0 +1,8 @@
+{
+  "description": "55-inch TV",
+  "category": "tv",
+  "screenInches": 55,
+  "maxTotal": 60000,
+  "requireRealDiscount": true,
+  "trustedStoresOnly": true
+}

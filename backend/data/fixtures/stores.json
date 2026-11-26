@@ -1,0 +1,56 @@
+[
+  {
+    "recordId": "a-store-sp-1",
+    "storeId": "a",
+    "name": "Pixel Harbour",
+    "domainAgeDays": 4380,
+    "returnPolicy": {
+      "kind": "refund",
+      "days": 30
+    },
+    "trusted": true
+  },
+  {
+    "recordId": "b-store-sp-1",
+    "storeId": "b",
+    "name": "Lumen & Lark",
+    "domainAgeDays": 3285,
+    "returnPolicy": {
+      "kind": "refund",
+      "days": 30
+    },
+    "trusted": true
+  },
+  {
+    "recordId": "c-store-sp-1",
+    "storeId": "c",
+    "name": "Volt Bazaar",
+    "domainAgeDays": 2190,
+    "returnPolicy": {
+      "kind": "refund",
+      "days": 14
+    },
+    "trusted": true
+  },
+  {
+    "recordId": "d-store-sp-1",
+    "storeId": "d",
+    "name": "Gridline Goods",
+    "domainAgeDays": 1460,
+    "returnPolicy": {
+      "kind": "refund",
+      "days": 30
+    },
+    "trusted": true
+  },
+  {
+    "recordId": "e-store-sp-1",
+    "storeId": "e",
+    "name": "MegaFlash Outlet",
+    "domainAgeDays": 41,
+    "returnPolicy": {
+      "kind": "all_sales_final"
+    },
+    "trusted": false
+  }
+]
