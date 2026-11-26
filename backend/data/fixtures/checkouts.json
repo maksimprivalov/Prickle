@@ -1,0 +1,722 @@
+[
+  {
+    "recordId": "a-tv55-co-1",
+    "offerId": "a-tv55",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 74900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 74900
+  },
+  {
+    "recordId": "a-tv65-co-1",
+    "offerId": "a-tv65",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 84900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 84900
+  },
+  {
+    "recordId": "a-tv50-co-1",
+    "offerId": "a-tv50",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 41900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 41900
+  },
+  {
+    "recordId": "a-tv43-co-1",
+    "offerId": "a-tv43",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 31900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 31900
+  },
+  {
+    "recordId": "a-soundbar-co-1",
+    "offerId": "a-soundbar",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 18900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 18900
+  },
+  {
+    "recordId": "a-headphones-co-1",
+    "offerId": "a-headphones",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 23900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 23900
+  },
+  {
+    "recordId": "a-laptop-co-1",
+    "offerId": "a-laptop",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 87900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 87900
+  },
+  {
+    "recordId": "a-tablet-co-1",
+    "offerId": "a-tablet",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 41900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 41900
+  },
+  {
+    "recordId": "b-tv55-co-1",
+    "offerId": "b-tv55",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 58500
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 58500
+  },
+  {
+    "recordId": "b-tv65-co-1",
+    "offerId": "b-tv65",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 82900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 82900
+  },
+  {
+    "recordId": "b-tv50-co-1",
+    "offerId": "b-tv50",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 47900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 47900
+  },
+  {
+    "recordId": "b-tv43-co-1",
+    "offerId": "b-tv43",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 31900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 31900
+  },
+  {
+    "recordId": "b-soundbar-co-1",
+    "offerId": "b-soundbar",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 20900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 20900
+  },
+  {
+    "recordId": "b-headphones-co-1",
+    "offerId": "b-headphones",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 23900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 23900
+  },
+  {
+    "recordId": "b-laptop-co-1",
+    "offerId": "b-laptop",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 88900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 88900
+  },
+  {
+    "recordId": "b-tablet-co-1",
+    "offerId": "b-tablet",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 40900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 40900
+  },
+  {
+    "recordId": "c-tv55-co-1",
+    "offerId": "c-tv55",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 59900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 59900
+  },
+  {
+    "recordId": "c-tv65-co-1",
+    "offerId": "c-tv65",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 82900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 82900
+  },
+  {
+    "recordId": "c-tv50-co-1",
+    "offerId": "c-tv50",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 40900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 40900
+  },
+  {
+    "recordId": "c-tv43-co-1",
+    "offerId": "c-tv43",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 32900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 32900
+  },
+  {
+    "recordId": "c-soundbar-co-1",
+    "offerId": "c-soundbar",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 18900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 18900
+  },
+  {
+    "recordId": "c-headphones-co-1",
+    "offerId": "c-headphones",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 22900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 22900
+  },
+  {
+    "recordId": "c-laptop-co-1",
+    "offerId": "c-laptop",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 89900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 89900
+  },
+  {
+    "recordId": "c-tablet-co-1",
+    "offerId": "c-tablet",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 41900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 41900
+  },
+  {
+    "recordId": "d-tv55-co-1",
+    "offerId": "d-tv55",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 59900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 4900
+      }
+    ],
+    "total": 64800
+  },
+  {
+    "recordId": "d-tv65-co-1",
+    "offerId": "d-tv65",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 91900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 4900
+      }
+    ],
+    "total": 96800
+  },
+  {
+    "recordId": "d-tv50-co-1",
+    "offerId": "d-tv50",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 42900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 4900
+      }
+    ],
+    "total": 47800
+  },
+  {
+    "recordId": "d-tv43-co-1",
+    "offerId": "d-tv43",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 29900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 1900
+      }
+    ],
+    "total": 31800
+  },
+  {
+    "recordId": "d-soundbar-co-1",
+    "offerId": "d-soundbar",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 18900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 1900
+      }
+    ],
+    "total": 20800
+  },
+  {
+    "recordId": "d-headphones-co-1",
+    "offerId": "d-headphones",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 23900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 1900
+      }
+    ],
+    "total": 25800
+  },
+  {
+    "recordId": "d-laptop-co-1",
+    "offerId": "d-laptop",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 82900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 4900
+      }
+    ],
+    "total": 87800
+  },
+  {
+    "recordId": "d-tablet-co-1",
+    "offerId": "d-tablet",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 40900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      },
+      {
+        "kind": "service_fee",
+        "label": "Service fee",
+        "amount": 4900
+      }
+    ],
+    "total": 45800
+  },
+  {
+    "recordId": "e-tv55-co-1",
+    "offerId": "e-tv55",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 55900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 55900
+  },
+  {
+    "recordId": "e-tv65-co-1",
+    "offerId": "e-tv65",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 84900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 84900
+  },
+  {
+    "recordId": "e-tv50-co-1",
+    "offerId": "e-tv50",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 43900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 43900
+  },
+  {
+    "recordId": "e-tv43-co-1",
+    "offerId": "e-tv43",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 31900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 31900
+  },
+  {
+    "recordId": "e-soundbar-co-1",
+    "offerId": "e-soundbar",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 18900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 18900
+  },
+  {
+    "recordId": "e-headphones-co-1",
+    "offerId": "e-headphones",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 22900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 22900
+  },
+  {
+    "recordId": "e-laptop-co-1",
+    "offerId": "e-laptop",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 85900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 85900
+  },
+  {
+    "recordId": "e-tablet-co-1",
+    "offerId": "e-tablet",
+    "lines": [
+      {
+        "kind": "item",
+        "label": "Item",
+        "amount": 39900
+      },
+      {
+        "kind": "shipping",
+        "label": "Free delivery",
+        "amount": 0
+      }
+    ],
+    "total": 39900
+  }
+]

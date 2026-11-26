@@ -1,0 +1,365 @@
+[
+  {
+    "trap": "over_budget",
+    "storeId": "a",
+    "offerId": "a-tv55",
+    "expectedCatcher": "mandate-guard",
+    "recordIds": [
+      "a-tv55-co-1",
+      "mandate"
+    ]
+  },
+  {
+    "trap": "fake_discount",
+    "storeId": "c",
+    "offerId": "c-tv55",
+    "expectedCatcher": "deal-verifier",
+    "recordIds": [
+      "c-tv55-of-1",
+      "c-tv55-ph-1023",
+      "c-tv55-ph-1024",
+      "c-tv55-ph-1025",
+      "c-tv55-ph-1026",
+      "c-tv55-ph-1027",
+      "c-tv55-ph-1028",
+      "c-tv55-ph-1029",
+      "c-tv55-ph-1030",
+      "c-tv55-ph-1031",
+      "c-tv55-ph-1032",
+      "c-tv55-ph-1033"
+    ]
+  },
+  {
+    "trap": "fake_discount",
+    "storeId": "c",
+    "offerId": "c-soundbar",
+    "expectedCatcher": "deal-verifier",
+    "recordIds": [
+      "c-soundbar-of-1",
+      "c-soundbar-ph-1021",
+      "c-soundbar-ph-1022",
+      "c-soundbar-ph-1023",
+      "c-soundbar-ph-1024",
+      "c-soundbar-ph-1025",
+      "c-soundbar-ph-1026",
+      "c-soundbar-ph-1027",
+      "c-soundbar-ph-1028",
+      "c-soundbar-ph-1029",
+      "c-soundbar-ph-1030",
+      "c-soundbar-ph-1031",
+      "c-soundbar-ph-1032",
+      "c-soundbar-ph-1033",
+      "c-soundbar-ph-1034",
+      "c-soundbar-ph-1035",
+      "c-soundbar-ph-1036"
+    ]
+  },
+  {
+    "trap": "fake_discount",
+    "storeId": "c",
+    "offerId": "c-laptop",
+    "expectedCatcher": "deal-verifier",
+    "recordIds": [
+      "c-laptop-of-1",
+      "c-laptop-ph-1023",
+      "c-laptop-ph-1024",
+      "c-laptop-ph-1025",
+      "c-laptop-ph-1026",
+      "c-laptop-ph-1027",
+      "c-laptop-ph-1028",
+      "c-laptop-ph-1029",
+      "c-laptop-ph-1030",
+      "c-laptop-ph-1031"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-tv55",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-tv55-of-1",
+      "d-tv55-co-1"
+    ]
+  },
+  {
+    "trap": "over_budget",
+    "storeId": "d",
+    "offerId": "d-tv55",
+    "expectedCatcher": "mandate-guard",
+    "recordIds": [
+      "d-tv55-co-1",
+      "mandate"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-tv65",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-tv65-of-1",
+      "d-tv65-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-tv50",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-tv50-of-1",
+      "d-tv50-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-tv43",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-tv43-of-1",
+      "d-tv43-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-soundbar",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-soundbar-of-1",
+      "d-soundbar-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-headphones",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-headphones-of-1",
+      "d-headphones-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-laptop",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-laptop-of-1",
+      "d-laptop-co-1"
+    ]
+  },
+  {
+    "trap": "hidden_fee",
+    "storeId": "d",
+    "offerId": "d-tablet",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "d-tablet-of-1",
+      "d-tablet-co-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-tv55",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-tv65",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-tv50",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-tv43",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-soundbar",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-headphones",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-laptop",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "no_refund_policy",
+    "storeId": "e",
+    "offerId": "e-tablet",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-store-sp-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-tv55",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-tv65",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-tv65-of-1",
+      "e-tv55-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-tv50",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-tv50-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-tv43",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-tv43-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-soundbar",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-soundbar-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-headphones",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-headphones-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-laptop-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-laptop",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-laptop-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-tablet-of-1"
+    ]
+  },
+  {
+    "trap": "fake_scarcity",
+    "storeId": "e",
+    "offerId": "e-tablet",
+    "expectedCatcher": "merchant-risk",
+    "recordIds": [
+      "e-tablet-of-1",
+      "e-tv55-of-1",
+      "e-tv65-of-1",
+      "e-tv50-of-1",
+      "e-tv43-of-1",
+      "e-soundbar-of-1",
+      "e-headphones-of-1",
+      "e-laptop-of-1"
+    ]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "seed": 20261127,
+  "blackFriday": "2026-11-27",
+  "historyDays": 60,
+  "counts": {
+    "stores": 5,
+    "offers": 40,
+    "priceHistoryRows": 2400,
+    "traps": 29
+  }
+}
