@@ -17,7 +17,15 @@ export type TransferRequest = {
 
 export type TransferResult =
   | { readonly ok: true; readonly signature: string }
-  | { readonly ok: false; readonly detail: string };
+  | {
+      readonly ok: false;
+      readonly detail: string;
+      /**
+       * True when the money may have moved anyway, e.g. a devnet transaction was sent but its
+       * confirmation timed out. pay() then counts it as spent, so the budget fails closed.
+       */
+      readonly maybeMoved: boolean;
+    };
 
 export type Wallet = {
   readonly kind: WalletKind;
