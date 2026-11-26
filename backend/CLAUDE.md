@@ -179,8 +179,8 @@ agents, the guard, the sources or the eval.
   session. The session server needs a child process or a worker per session, or one session at a
   time; decide before Fri 10:30.
 - **LLM key:** Mozaik picks the provider from the model name; `OPENAI_API_KEY`,
-  `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` all work. `.env.example` uses `OPENAI_API_KEY`;
-  switch it if we pick another provider.
+  `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` all work. **Decided: Gemini** (free key for judges);
+  `.env.example` uses `GEMINI_API_KEY`. The `fast`/`strong` model tiers map to Gemini models.
 - **Mozaik Cloud:** `@mozaik-ai/cloud-sdk` 0.1.5 (a dependency of core) declares peer core
   `^4 || ^5`. Check that pairing works with core 6 early; if not, pin core to 5.0.1.
 - Test USDC from Circle's faucet on Solana devnet — confirm before Thu 17:00.
