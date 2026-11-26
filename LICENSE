@@ -1,0 +1,54 @@
+Prickle — Proprietary License
+
+Copyright (c) 2026 Maksim Privalov and Tara Petričić. All rights reserved.
+
+1. Ownership
+
+Prickle (the "Software") includes its source code, prompts, documentation,
+designs, diagrams and synthetic data sets. The Software is the exclusive
+property of the copyright holders named above.
+
+2. No license granted
+
+Except as stated in section 3, no right or license is granted to use, copy,
+modify, merge, publish, distribute, sublicense, sell or create derivative works
+of the Software, in whole or in part, without the prior written permission of
+all copyright holders.
+
+3. Limited permissions
+
+a) Viewing. Anyone may view the source code in this public repository. Viewing
+   grants no other right.
+
+b) Hackathon evaluation. The organizers and judges of the Mozaik Black Friday
+   AI Hackathon (JigJoy d.o.o., 26–27 November 2026) may access, install, run
+   and evaluate the Software for the purpose of judging the hackathon.
+
+c) Showcase. JigJoy d.o.o. may showcase the project in its gallery, winner
+   announcements and event communications, as set out in section 10 of the
+   hackathon rules. This is a non-exclusive right and does not transfer
+   ownership.
+
+4. Third-party components
+
+Third-party libraries and frameworks used by the Software (for example
+@mozaik-ai/core, licensed under the MIT License) remain under their own
+licenses. Their copyright and license notices must be kept.
+
+5. No warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR ITS USE.
+
+6. Not financial advice
+
+The Software is a hackathon prototype that works only with synthetic data and
+test networks. Its output is not financial advice.
+
+7. Permission requests
+
+To request any use not allowed above, contact the copyright holders through
+this repository.
