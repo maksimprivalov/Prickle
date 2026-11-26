@@ -24,8 +24,11 @@ optional: terminal output comes first.
 (`runtime/port.ts`: `ToolSpec`/`defineTool`, `AgentSpec`/`defineAgent`, `Runtime`), the run log
 (`runtime/run-log.ts`, which also records `loop.started`/`loop.finished` and tool calls for the
 timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
-(`runtime/mozaik/`, tested with a scripted model, not yet against a live LLM) exist; `demo`,
-`eval`, `dev`, `gen:data` and `wallet:setup` are stubs that exit 1. When a folder does not exist
+(`runtime/mozaik/`, tested with a scripted model, not yet against a live LLM), the synthetic
+data (`pnpm gen:data`, `data/fixtures/`), the mock stores (`mock-stores/`: `startMockStores()`,
+or `pnpm exec tsx src/mock-stores/main.ts` to browse them) and the store tools (`tools/`:
+`search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) exist; `demo`,
+`eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
 imports it without our path aliases.
