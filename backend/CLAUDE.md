@@ -20,7 +20,10 @@ store API, payments, the synthetic dataset and its generator, the eval, the CLI 
 the session server the frontend streams from. The UI is [`../frontend/`](../frontend/) and is
 optional: terminal output comes first.
 
-**Status: scaffolded.** Workspace, configs, all dependencies and `core/money` exist; `demo`,
+**Status: scaffolded.** Workspace, configs, all dependencies, `core/money`, the runtime port
+(`runtime/port.ts`: `ToolSpec`/`defineTool`, `AgentSpec`/`defineAgent`, `Runtime`), the run log
+(`runtime/run-log.ts`, which also records `loop.started`/`loop.finished` and tool calls for the
+timing table) and the plain adapter (`runtime/plain/`) exist; `demo`,
 `eval`, `dev`, `gen:data` and `wallet:setup` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
