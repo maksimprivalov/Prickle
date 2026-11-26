@@ -205,7 +205,7 @@ prickle/
 
 ## Plan
 
-**Goal: one mandate running end to end by Thursday 20:00, demo-ready by Friday 17:00.** Split below is a first proposal; adjust it to Tara's skills.
+**Goal: one mandate running end to end by Thursday 20:00, demo-ready by Friday 17:00.** Split below is a first proposal; the agreed split and timeline are in [`work-split.md`](work-split.md).
 
 | When | Goal |
 | --- | --- |

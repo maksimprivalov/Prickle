@@ -1,0 +1,26 @@
+{
+  "name": "prickle",
+  "private": true,
+  "description": "A team of AI agents that shops for you on Black Friday, pays from a capped wallet, and never spends more than you allowed.",
+  "license": "SEE LICENSE IN LICENSE",
+  "type": "module",
+  "packageManager": "pnpm@10.34.9",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "demo": "pnpm --filter @prickle/backend demo",
+    "eval": "pnpm --filter @prickle/backend eval",
+    "dev": "pnpm --parallel --filter @prickle/backend --filter @prickle/frontend dev",
+    "gen:data": "pnpm --filter @prickle/backend gen:data",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test",
+    "check": "pnpm -r check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "3.10.1"
+  }
+}

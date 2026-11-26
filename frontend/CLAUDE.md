@@ -9,7 +9,7 @@ everything else is in [`../backend/`](../backend/).
 `pnpm demo` is the fallback. So: smallest thing that shows the judges concurrency, sources and
 the guard; no polish that costs an hour.
 
-**Status: not scaffolded yet.** Layout, scripts and names below are the plan. Create them as
+**Status: scaffolded** (Vite, React, Tailwind v4, Vitest + MSW installed; one placeholder page). Create the rest as
 described rather than inventing different ones; update this file when reality diverges.
 
 ## Stack

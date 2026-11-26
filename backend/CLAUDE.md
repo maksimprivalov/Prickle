@@ -20,9 +20,11 @@ store API, payments, the synthetic dataset and its generator, the eval, the CLI 
 the session server the frontend streams from. The UI is [`../frontend/`](../frontend/) and is
 optional: terminal output comes first.
 
-**Status: not scaffolded yet.** The layout, scripts and names below are the plan and the contract
-for scaffolding. When a script or folder does not exist yet, create it as described here rather
-than inventing a different one; when reality diverges, update this file in the same change.
+**Status: scaffolded.** Workspace, configs, all dependencies and `core/money` exist; `demo`,
+`eval`, `dev`, `gen:data` and `wallet:setup` are stubs that exit 1. When a folder does not exist
+yet, create it as described here rather than inventing a different one; when reality diverges,
+update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
+imports it without our path aliases.
 
 ## The shape of the system
 
@@ -145,10 +147,12 @@ Loaded from `.claude/rules/` when matching files are touched:
 
 ## Team and plan
 
+Full split, hour-by-hour timeline and sync points: [`../work-split.md`](../work-split.md).
+
 | | Owns |
 | --- | --- |
-| Maksim | mandate guard + interception, `pay()` (devnet + mock), deal verifier, merchant-risk agent, spend report |
-| Tara | synthetic stores/offers/histories/traps, scouts, mock store API, UI or terminal view, README, demo video, pitch |
+| Maksim | scaffold + all deps, `core/money`, `runtime/` (port, plain, Mozaik adapter), `core/guard` + interception, `core/grounding`, `core/deal` + deal verifier, `payments/`, reviewer, budget agent, `app/` (demo CLI, session server), spend report, Cloud pairing + timing table |
+| Tara | `core/events` contracts, data generator + fixtures + traps, `mock-stores/`, `tools/`, scouts, merchant-risk agent, terminal output, `pnpm eval`, `frontend/`, README, judge run, pitch, demo video, submission |
 
 Thu until 14:00 setup and data · Thu 15–20 scouts + deal verifier in parallel, first mandate end
 to end on the mock wallet · **Thu 17:00 decide devnet or mock** · Fri until 14:00 remaining agents,
@@ -161,8 +165,19 @@ agents, the guard, the sources or the eval.
 
 ## Open items
 
-- Exact Mozaik signatures (`defineRuntime`, `createAgent`, `createHuman`, `runLoop`,
-  `RuntimeState`, `FunctionTool`, situation handlers, interception) — check before writing the
-  adapter.
-- Which LLM provider ships with Mozaik, and so the one env var name in `.env.example`.
+- **Mozaik is 6.0.0** (published 25 Nov 2026), not the 4.x in the idea. Confirmed in its README
+  and `dist/index.d.ts`: `defineRuntime<State>()` returns `initializeRuntime`, `join`, `leave`,
+  `sendMessage`, `sendEvent`, `runLoop`, `resolveRuntime`; `RuntimeState`, `createAgent`,
+  `createHuman`, `SituationSpecification` + `SituationHandler`, `InterceptionHandler`
+  (`isSatisfiedBy` / `handle` on a transition, 4th argument of `runLoop`), `FunctionTool` (as
+  `Tool`). `runLoop` is fire-and-forget. Still to read in detail before the adapter:
+  `FunctionTool`'s fields, `InferenceInput`, `ExecutableTransition`.
+- **`initializeRuntime` throws if called twice**, so one runtime per *process*, not per
+  session. The session server needs a child process or a worker per session, or one session at a
+  time; decide before Fri 10:30.
+- **LLM key:** Mozaik picks the provider from the model name; `OPENAI_API_KEY`,
+  `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` all work. `.env.example` uses `OPENAI_API_KEY`;
+  switch it if we pick another provider.
+- **Mozaik Cloud:** `@mozaik-ai/cloud-sdk` 0.1.5 (a dependency of core) declares peer core
+  `^4 || ^5`. Check that pairing works with core 6 early; if not, pin core to 5.0.1.
 - Test USDC from Circle's faucet on Solana devnet — confirm before Thu 17:00.

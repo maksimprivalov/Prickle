@@ -1,0 +1,18 @@
+node_modules/
+dist/
+coverage/
+*.log
+*.tsbuildinfo
+
+# Secrets: the LLM key and the devnet keypair never leave the machine.
+.env
+.env.*
+!.env.example
+.wallet/
+*keypair*.json
+id.json
+
+# Run logs are local; only the committed sample run is kept.
+backend/runs/*
+!backend/runs/sample-run.jsonl
+!backend/runs/.gitkeep
