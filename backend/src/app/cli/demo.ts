@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
 import { formatEvent } from '@app/cli/terminal';
+import { createGroundingCheck } from '@app/grounding-check';
 import { spendReport } from '@app/cli/spend-report';
 import { runSession, type SessionState } from '@app/run-session';
 import type { PrickleEvent } from '@core/events';
@@ -62,6 +63,13 @@ async function main(): Promise<number> {
     state: { mandate, verdicts: [] },
     log: createJsonlRunLog(logPath),
     models: { fast: env.MODEL_FAST, strong: env.MODEL_STRONG },
+    // Fix 1: answers with a number no cited record holds are dropped before anyone sees them.
+    checkOutput: createGroundingCheck({
+      sessionId,
+      mandate,
+      clock: () => new Date(),
+      publish: (event) => runtime.publish(event),
+    }),
     // Generous, because a loop may wait for a free request slot under the free-tier limit.
     loopTimeoutMs: 180_000,
     // Keeps Gemini's thought signatures, which Mozaik 6.0.0 drops (docs/mozaik-findings.md).

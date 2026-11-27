@@ -27,7 +27,9 @@ Only a JSON object, with nothing before or after it (no code fence, no prose):
 
 - `conclusion`: `real`, `fake`, `unverifiable` or `no_claim`.
 - `text`: one or two plain sentences for the shopper. Write prices in euros with two decimals
-  (e.g. €599.00), exactly as the records give them in cents. No other numbers except dates.
+  (e.g. €599.00), exactly as the records give them in cents, and dates as YYYY-MM-DD, exactly
+  as the rows give them. No other numbers, apart from "the 30 days before". Plain code checks
+  every number against the records you cite and drops the answer if one does not match.
 - `sources`: the `recordId` of the offer and of every price-history row your text relies on.
 
 ## Rules
