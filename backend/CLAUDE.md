@@ -29,7 +29,9 @@ timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
 `pay()` with its guard interceptor (`payments/pay.ts`), the synthetic data (`pnpm gen:data`,
 `data/fixtures/`), the mock stores (`mock-stores/`: `startMockStores()`, or
 `pnpm exec tsx src/mock-stores/main.ts` to browse them) and the store tools (`tools/`:
-`search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) exist; `demo`,
+`search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) and the five
+scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live with
+`pnpm exec tsx scripts/try-scouts.ts`) exist; `demo`,
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
@@ -190,6 +192,21 @@ agents, the guard, the sources or the eval.
 - **LLM key:** Mozaik picks the provider from the model name; `OPENAI_API_KEY`,
   `ANTHROPIC_API_KEY` and `GEMINI_API_KEY` all work. **Decided: Gemini** (free key for judges);
   `.env.example` uses `GEMINI_API_KEY`. The `fast`/`strong` model tiers map to Gemini models.
+  - **Blocker (found 26 Nov, live scout run):** Mozaik 6.0.0's Gemini endpoint drops
+    `thoughtSignature` from `functionCall` parts (`toResponse` / the `functionCall` part in
+    `dist/index.mjs`), and Gemini 3.x answers 400 "Function call is missing a thought_signature"
+    on the turn after any tool call. So no Gemini agent with a tool can finish on Mozaik 6.0.0.
+    **Workaround:** `runtime/mozaik/gemini-thought-signatures.ts` wraps Mozaik's own Gemini
+    mapper to keep the signatures, and retries 503/429 (Gemini is often overloaded) up to 3
+    times. Pass `inference: createGeminiSafeRunner()` to `createMozaikRuntime` (one per
+    session); `scripts/try-scouts.ts` does, and 5/5 scouts finished live on
+    `gemini-3.5-flash-lite`. Still to decide: make it the adapter's default. Drop it when Mozaik
+    keeps signatures itself. Written up for the judges in
+    [`../docs/mozaik-findings.md`](../docs/mozaik-findings.md); keep it current.
+  - **Risk for judge mode: the free Gemini quota.** After a few back-to-back runs of five
+    concurrent agents the free tier answers 429 "exceeded your current quota". A full `pnpm demo`
+    (5 scouts + 2 checkers per offer + reviewer) makes more calls than the scout run. Measure a
+    full run's call count before the demo.
 - **Mozaik Cloud:** `@mozaik-ai/cloud-sdk` 0.1.5 (a dependency of core) declares peer core
   `^4 || ^5`. Check that pairing works with core 6 early; if not, pin core to 5.0.1.
 - **Devnet (checked 26 Nov):** `pnpm wallet:setup` works: genesis hash checked, Circle's devnet
