@@ -1,7 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { z } from 'zod';
+import { reactMerchantRisk } from '@agents/react-merchant-risk';
 import { startScouts } from '@agents/start-scouts';
 import { formatEvent } from '@app/cli/terminal';
+import { NOT_FINANCIAL_ADVICE } from '@core/disclaimer/disclaimer';
 import { EventName, type PrickleEvent } from '@core/events';
 import { Mandate } from '@core/mandate';
 import { createGeminiSafeRunner } from '@runtime/mozaik/gemini-thought-signatures';
@@ -13,6 +15,8 @@ import { startMockStores } from '../src/mock-stores/serve';
 //
 //   pnpm exec tsx scripts/try-scouts.ts                     the demo mandate (55-inch TV)
 //   pnpm exec tsx scripts/try-scouts.ts '<mandate JSON>'    any other mandate
+//   pnpm exec tsx scripts/try-scouts.ts --merchant-risk     also run merchant risk on each
+//                                                           offer.found, as it appears
 //   pnpm exec tsx scripts/try-scouts.ts --no-gemini-fix     reproduce the Mozaik 6.0.0 Gemini
 //                                                           bug (docs/mozaik-findings.md)
 //
@@ -39,6 +43,7 @@ const env = Env.parse(process.env);
 
 const args = process.argv.slice(2);
 const geminiFix = !args.includes('--no-gemini-fix');
+const withMerchantRisk = args.includes('--merchant-risk');
 const mandateArg = args.find((arg) => !arg.startsWith('--'));
 const mandate = Mandate.parse(
   JSON.parse(
@@ -71,22 +76,67 @@ runtime.publish({
   mandate,
 });
 
-const runs = await startScouts(runtime, {
-  mandate,
-  client: { baseUrl: stores.baseUrl, fetch },
-  clock,
+/** A 429 from Gemini is hundreds of characters of JSON; say what it means instead. */
+const shortDetail = (detail: string): string =>
+  detail.includes('"code":429')
+    ? 'LLM quota exceeded (429): wait a minute and rerun'
+    : detail.slice(0, 200);
+
+// Per offer: the merchant-risk verdict, or why there is none. Printed at the end.
+const riskOutcomes = new Map<string, string>();
+runtime.observe(EventName.VerdictReady, (event) => {
+  if (event.type !== EventName.VerdictReady || event.verdict.checker !== 'merchant-risk') return;
+  const { offerId, decision, reasons } = event.verdict;
+  riskOutcomes.set(
+    offerId,
+    [
+      `${decision}: ${reasons.map((r) => r.code).join(', ')}`,
+      ...reasons.map((r) => `      ${r.text}`),
+    ].join('\n'),
+  );
 });
+
+const client = { baseUrl: stores.baseUrl, fetch };
+if (withMerchantRisk) {
+  reactMerchantRisk(runtime, {
+    client,
+    clock,
+    onNotice: (n) => {
+      if (n.kind === 'no_verdict') {
+        riskOutcomes.set(n.offerId, `no verdict: ${shortDetail(n.detail)}`);
+      } else if (n.kind === 'fallback') {
+        console.log(
+          `  merchant-risk ${n.offerId}: decided without the model (${shortDetail(n.detail)})`,
+        );
+      } else {
+        console.log(
+          `  merchant-risk ${n.offerId}: model claimed ${n.codes.join(', ')}; code disagreed`,
+        );
+      }
+    },
+  });
+}
+const runs = await startScouts(runtime, { mandate, client, clock });
+// Merchant-risk loops started by offer.found may still be running.
+await runtime.idle();
 await stores.close();
 
 console.log('\nScout answers:');
 for (const run of runs) {
   const name = `scout-${run.storeId}`;
   if (!run.result.ok) {
-    console.log(`  ${name}: failed (${run.result.reason}) ${run.result.detail}`);
+    console.log(`  ${name}: failed (${run.result.reason}) ${shortDetail(run.result.detail)}`);
     continue;
   }
   console.log(`  ${name}: ${run.result.output.note}`);
   for (const d of run.dropped) console.log(`    dropped ${d.recordId}: ${d.reason}`);
+}
+if (withMerchantRisk) {
+  console.log('\nMerchant risk (is the store behind each offer safe?):');
+  for (const offer of runs.flatMap((run) => run.offers)) {
+    console.log(`  ${offer.offerId}: ${riskOutcomes.get(offer.offerId) ?? 'no verdict'}`);
+  }
+  console.log(`  ${NOT_FINANCIAL_ADVICE}`);
 }
 const found = runs.reduce((n, run) => n + run.offers.length, 0);
 const failed = runs.filter((run) => !run.result.ok).length;
