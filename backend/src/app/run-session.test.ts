@@ -3,13 +3,14 @@ import { z } from 'zod';
 import { fixtures } from '@test/fixtures';
 import { PrickleEvent } from '@core/events';
 import { Mandate } from '@core/mandate';
-import { usdcUnits } from '@core/money';
+import { cents, formatEur, usdcUnits } from '@core/money';
 import { createMockWallet } from '@payments/mock-wallet';
 import type { ModelDriver } from '@runtime/plain/plain-runtime';
 import { createPlainRuntime } from '@runtime/plain/plain-runtime';
 import { RunLogLine, createMemoryRunLog } from '@runtime/run-log';
 import { createMockStoresApp } from '../mock-stores/app';
 import { loadFixtures } from '../mock-stores/fixtures';
+import { createGroundingCheck } from './grounding-check';
 import { runSession, type SessionState } from './run-session';
 
 // The whole demo session on the plain runtime: Tara's real mock stores in-process, a scripted
@@ -20,6 +21,14 @@ const ScoutHit = z.object({
   offers: z.array(z.object({ recordId: z.string() })),
 });
 const OfferMessage = z.object({ recordId: z.string(), storeId: z.string(), offerId: z.string() });
+const History = z.object({
+  ok: z.literal(true),
+  rows: z.array(z.object({ recordId: z.string(), date: z.string(), price: z.number() })),
+});
+type DealScript = (
+  offer: z.infer<typeof OfferMessage>,
+  rows: z.infer<typeof History>['rows'],
+) => { conclusion: string; text: string; sources: string[] };
 const BudgetMessage = z.object({
   candidates: z.array(
     z.object({
@@ -34,7 +43,7 @@ const PayResult = z.object({ status: z.string().optional() }).loose();
 
 /** What a sensible model would do, per agent. The budget step tries the cheapest first. */
 const scriptedModel =
-  (options: { budgetIgnoresVerdicts?: boolean } = {}): ModelDriver =>
+  (options: { budgetIgnoresVerdicts?: boolean; deal?: DealScript } = {}): ModelDriver =>
   async ({ agent, message, callTool }) => {
     if (agent.name.startsWith('scout-')) {
       const hit = ScoutHit.safeParse(
@@ -47,8 +56,17 @@ const scriptedModel =
     }
     if (agent.name === 'deal-verifier') {
       const offer = OfferMessage.parse(JSON.parse(message));
-      await callTool('price_history', { storeId: offer.storeId, offerId: offer.offerId });
-      return { conclusion: 'real', text: 'Looks like a real discount.', sources: [offer.recordId] };
+      const history = History.safeParse(
+        await callTool('price_history', { storeId: offer.storeId, offerId: offer.offerId }),
+      );
+      const rows = history.success ? history.data.rows : [];
+      return (
+        options.deal?.(offer, rows) ?? {
+          conclusion: 'real',
+          text: 'Looks like a real discount.',
+          sources: [offer.recordId],
+        }
+      );
     }
     if (agent.name === 'merchant-risk') {
       const offer = OfferMessage.parse(
@@ -100,6 +118,13 @@ async function demo(driver: ModelDriver, mandate: unknown = fixtures.mandate) {
     driver,
     log,
     clock: () => new Date('2026-11-27T20:00:00.000Z'),
+    // As in pnpm demo: fix 1 runs on every checker's answer.
+    checkOutput: createGroundingCheck({
+      sessionId: 'demo-test',
+      mandate: Mandate.parse(mandate),
+      clock: () => new Date('2026-11-27T20:00:00.000Z'),
+      publish: (event) => runtime.publish(event),
+    }),
   });
   const events: PrickleEvent[] = [];
   runtime.observe('*', (e) => events.push(PrickleEvent.parse(e)));
@@ -195,5 +220,53 @@ describe('runSession(): the demo mandate', () => {
     const { result, transfer } = await demo(() => Promise.reject(new Error('model down')));
     expect(result.outcome).toMatchObject({ kind: 'failed' });
     expect(transfer).not.toHaveBeenCalled();
+  });
+
+  it('drops a checker answer with an invented number, and the code verdict stands', async () => {
+    // The deal verifier claims B "was €749.00": no record says so (B was €699.00).
+    const { result, events } = await demo(
+      scriptedModel({
+        deal: (offer) => ({
+          conclusion: 'real',
+          text: 'It was €749.00 before the cut.',
+          sources: [offer.recordId],
+        }),
+      }),
+    );
+    const rejected = events.filter((e) => e.type === 'grounding.rejected');
+    expect(rejected).toContainEqual(
+      expect.objectContaining({
+        agent: 'deal-verifier',
+        offerId: 'b-tv55',
+        unsourcedNumbers: ['749.00'],
+      }),
+    );
+    // The answer is gone; the verdict carries the code's own wording, and B is still paid.
+    const b = result.verdicts.find((v) => v.offerId === 'b-tv55' && v.checker === 'deal-verifier');
+    expect(b?.decision).toBe('pass');
+    expect(b?.reasons[0]?.text).not.toContain('749');
+    expect(result.outcome).toEqual({ kind: 'paid', offerId: 'b-tv55' });
+  });
+
+  it('keeps a checker answer whose numbers all come from cited records', async () => {
+    const { events, result } = await demo(
+      scriptedModel({
+        deal: (offer, rows) => {
+          const row = rows.find((r) => r.date === '2026-11-01');
+          if (!row) throw new Error('row missing');
+          const euros = formatEur(cents(row.price));
+          return {
+            conclusion: offer.offerId === 'c-tv55' ? 'fake' : 'real',
+            text: `On 2026-11-01 it cost ${euros}, within the 30 days before the reduction.`,
+            sources: [offer.recordId, row.recordId],
+          };
+        },
+      }),
+    );
+    expect(events.filter((e) => e.type === 'grounding.rejected')).toEqual([]);
+    const c = result.verdicts.find((v) => v.offerId === 'c-tv55' && v.checker === 'deal-verifier');
+    expect(c?.reasons[0]?.text).toBe(
+      'On 2026-11-01 it cost €649.00, within the 30 days before the reduction.',
+    );
   });
 });

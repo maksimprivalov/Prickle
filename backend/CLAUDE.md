@@ -35,7 +35,9 @@ with `pnpm exec tsx scripts/try-scouts.ts`), the deal verifier, the merchant-ris
 (decided in `core/risk`, a situation handler on `offer.found` via
 `agents/react-merchant-risk.ts`; if the model fails, the same code decides from the tools
 called directly) and the budget agent (`agents/`), and `pnpm demo` (`app/run-session.ts`,
-`app/cli/demo.ts`) exist. The grounding check (fix 1) and the reviewer are not wired yet.
+`app/cli/demo.ts`) exist. Number grounding (fix 1: `core/grounding`, wired in
+`app/grounding-check.ts`) runs on the checkers' and the budget agent's answers; the reviewer is
+not wired yet.
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
