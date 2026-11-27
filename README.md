@@ -53,7 +53,7 @@ pnpm demo
 `pnpm demo` runs one mandate end to end on the synthetic stores and the mock wallet, and writes
 the run log to `backend/runs/<session>.jsonl`. On a free Gemini key it takes **about 3–4
 minutes**: the free tier allows 15 requests a minute, so most of the time is agents waiting for a
-request slot (each waiting agent shows in the output; nothing is stuck).
+request slot. Long gaps between lines are that waiting, not a hang.
 
 ### Expected output
 
@@ -94,8 +94,8 @@ for:
 | A | €749 | not paid | over the €600 mandate |
 | B | €585 | **paid** | real discount (€699 for 60 days), trusted store, refund policy |
 | C | €599 | rejected | fake discount: the "was" €649 is above the lowest price of the 30 days before |
-| D | €599 | rejected | €648 at checkout: a €49 service fee appears only there |
-| E | €559 | not paid | untrusted store with fake scarcity |
+| D | €599 | rejected | €648 at checkout: a €49 service fee appears only there, over the mandate |
+| E | €559 | not paid | untrusted store: fake scarcity, no refund policy |
 
 ### The web view (optional)
 
