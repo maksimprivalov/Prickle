@@ -1,33 +1,25 @@
 import { z } from 'zod';
 import type { PrickleEvent } from '@core/events';
 import type { Mandate } from '@core/mandate';
-import { createGeminiSafeRunner } from '@runtime/mozaik/gemini-thought-signatures';
 import { createMozaikRuntime } from '@runtime/mozaik/mozaik-runtime';
 import type { Runtime } from '@runtime/port';
 import type { RunLog } from '@runtime/run-log';
 import { createGroundingCheck } from './grounding-check';
+import { NO_LLM_KEY, hasLlmKey, llmEnvFields, llmRuntimeOptions } from './llm-config';
 import type { SessionState } from './run-session';
 
-// How a live session is built, for both `pnpm demo` and the session server: Mozaik, the model
-// tiers from env, the Gemini fix and request limit, and the grounding check (fix 1).
+// How a live session is built, for `pnpm demo`, `pnpm eval` and the session server: Mozaik, the
+// models, keys and per-model request limits from env (llm-config.ts), the Gemini fix, and the
+// grounding check (fix 1).
 
 export const LiveEnv = z
   .object({
-    GEMINI_API_KEY: z.string().min(1).optional(),
-    OPENAI_API_KEY: z.string().min(1).optional(),
-    ANTHROPIC_API_KEY: z.string().min(1).optional(),
-    // gemini-3.5-flash was overloaded (503) on every run on 26 Nov; the lite model was not.
-    MODEL_FAST: z.string().min(1).default('gemini-3.5-flash-lite'),
-    MODEL_STRONG: z.string().min(1).default('gemini-3.5-flash-lite'),
-    // Gemini's free tier allows 15 requests per minute per model; stay just under it. 0 = no limit.
-    GEMINI_REQUESTS_PER_MINUTE: z.coerce.number().int().min(0).default(14),
+    ...llmEnvFields,
     // Under the free-tier limit a loop spends most of its time waiting for a request slot (the
     // live run of 27 Nov had calls a minute apart), so loops get six minutes before they fail.
     LOOP_TIMEOUT_SECONDS: z.coerce.number().int().min(10).default(360),
   })
-  .refine((env) => env.GEMINI_API_KEY ?? env.OPENAI_API_KEY ?? env.ANTHROPIC_API_KEY, {
-    message: 'No LLM key: put GEMINI_API_KEY=... in backend/.env (see .env.example).',
-  });
+  .refine(hasLlmKey, { message: NO_LLM_KEY });
 export type LiveEnv = z.infer<typeof LiveEnv>;
 
 /** Loads backend/.env when there is one; the key may also come from the environment. */
@@ -47,17 +39,26 @@ export function newSessionId(prefix: string, now: Date = new Date()): string {
   return `${prefix}-${now.toISOString().replaceAll(/[:.]/g, '-').toLowerCase()}`;
 }
 
+/** One line for the terminal: which models, and how many Gemini keys. Never the keys. */
+export function describeLive(env: LiveEnv, rawEnv: NodeJS.ProcessEnv = process.env): string {
+  return llmRuntimeOptions(env, rawEnv).describe;
+}
+
 export function createLiveRuntime(
   env: LiveEnv,
   session: { readonly sessionId: string; readonly mandate: Mandate; readonly log: RunLog },
+  /** Where the extra Gemini keys (GEMINI_API_KEY_2, ...) are read from. */
+  rawEnv: NodeJS.ProcessEnv = process.env,
 ): Runtime<PrickleEvent, SessionState> {
   const { sessionId, mandate, log } = session;
-  const usesGemini = [env.MODEL_FAST, env.MODEL_STRONG].some((m) => m.startsWith('gemini'));
+  // One runner per session: it holds the thought-signature memory and the request limiters.
+  const llm = llmRuntimeOptions(env, rawEnv);
   const runtime = createMozaikRuntime<PrickleEvent, SessionState>({
     sessionId,
     state: { mandate, verdicts: [] },
     log,
-    models: { fast: env.MODEL_FAST, strong: env.MODEL_STRONG },
+    models: llm.models,
+    agentModels: llm.agentModels,
     // Fix 1: answers with a number no cited record holds are dropped before anyone sees them.
     checkOutput: createGroundingCheck({
       sessionId,
@@ -66,10 +67,8 @@ export function createLiveRuntime(
       publish: (event) => runtime.publish(event),
     }),
     loopTimeoutMs: env.LOOP_TIMEOUT_SECONDS * 1000,
-    // Keeps Gemini's thought signatures, which Mozaik 6.0.0 drops (docs/mozaik-findings.md).
-    ...(usesGemini
-      ? { inference: createGeminiSafeRunner({ requestsPerMinute: env.GEMINI_REQUESTS_PER_MINUTE }) }
-      : {}),
+    // Gemini thought-signature fix, per-model free-tier limits, one or more keys.
+    ...(llm.inference ? { inference: llm.inference } : {}),
   });
   return runtime;
 }

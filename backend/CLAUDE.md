@@ -38,9 +38,13 @@ called directly), the reviewer (`agents/reviewer.ts`, decision in `core/review`:
 checkers per offer and logs disagreements as `review.done`, fix 4b) and the budget agent, which
 pays only reviewed passes (`agents/`), and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`)
 exist. Number grounding (fix 1: `core/grounding`, wired in `app/grounding-check.ts`) runs on the
-checkers', the reviewer's and the budget agent's answers.
-`pnpm dev` runs the session server (`app/server/`: `POST /api/sessions`, SSE at
-`GET /api/sessions/:id/events`, one session at a time); `eval` is a stub that exits 1. When a folder does not exist
+checkers', the reviewer's and the budget agent's answers. `pnpm eval` (`app/eval/`,
+`app/cli/eval.ts`) runs every offer through the checkers, the reviewer and the guard and rebuilds
+its tables from the run log: live on Mozaik by default, `--scripted` with no LLM,
+`--offers tv55` for the demo TVs only. `pnpm dev` runs the session server (`app/server/`:
+`POST /api/sessions`, SSE at `GET /api/sessions/:id/events`, one session at a time). All live
+runs (demo, eval, server) build their runtime in `app/live-runtime.ts`, with models, keys and
+request limits from `app/llm-config.ts`. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
 imports it without our path aliases.
@@ -212,10 +216,17 @@ agents, the guard, the sources or the eval.
     `gemini-3.5-flash-lite`. Still to decide: make it the adapter's default. Drop it when Mozaik
     keeps signatures itself. Written up for the judges in
     [`../docs/mozaik-findings.md`](../docs/mozaik-findings.md); keep it current.
-  - **Risk for judge mode: the free Gemini quota.** After a few back-to-back runs of five
-    concurrent agents the free tier answers 429 "exceeded your current quota". A full `pnpm demo`
-    (5 scouts + 2 checkers per offer + reviewer) makes more calls than the scout run. Measure a
-    full run's call count before the demo.
+  - **Risk for judge mode: the free Gemini quota.** Free quotas are per model and per Google
+    project, measured 27 Nov from Gemini's 429 answers: `gemini-3.5-flash-lite` 15/min,
+    `gemini-3.5-flash` 5/min and only 20/day; `gemini-3.1-pro-preview` has no free quota;
+    `gemini-3.8-flash` answered 503 (overloaded). A paid key is not an option for us (billing
+    unavailable from Serbia). So `app/llm-config.ts` throttles each model just under its limit
+    and accepts extra keys from other Google projects (`GEMINI_API_KEY_2`, `_3`, ...; each loop
+    stays on one key so thought signatures never cross projects): the lever that scales.
+    `MODEL_REVIEWER=gemini-3.5-flash` moves the reviewer to that model's quota, opt-in because
+    of the 20/day cap. Judge mode still needs one key. A full `pnpm demo` on one free key took
+    about 4 minutes on 27 Nov, almost all of it waiting for request slots; the live eval on the
+    demo TVs (`pnpm eval --offers tv55`) about 3 minutes.
 - **Mozaik Cloud (27 Nov):** this machine is paired (`npx @mozaik-ai/cloud-sdk pair`; the key is in
   `~/.mozaik/credentials.json`, outside the repo) and the Cloud client reports `enabled: true`
   with core 6, although `@mozaik-ai/cloud-sdk` 0.1.5 declares peer core `^4 || ^5`. Mozaik's own

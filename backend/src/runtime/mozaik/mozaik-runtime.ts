@@ -71,6 +71,11 @@ export type MozaikRuntimeConfig<S> = {
   readonly log: RunLog;
   /** Model name per tier, from Mozaik's supported models (e.g. "gpt-5.4-mini"). */
   readonly models: Readonly<Record<ModelTier, string>>;
+  /**
+   * A model for one agent by name, over its tier's. Free-tier quotas are per model, so moving
+   * an agent that makes few calls to another model frees requests for the rest.
+   */
+  readonly agentModels?: Readonly<Record<string, string>>;
   readonly clock?: () => Date;
   readonly checkOutput?: OutputCheck;
   /** Default: src/prompts/<file>. */
@@ -124,7 +129,9 @@ const providers: InferenceRunner = {
  */
 function safeInference(inner: InferenceRunner, failures: Map<string, string>): InferenceRunner {
   const failed = (input: InferenceInput, detail: string): InferenceOutput => {
-    failures.set(input.context.id, detail);
+    // The detail ends up in the run log, which may be committed. Providers send keys in
+    // headers, not messages, but a key-shaped string is scrubbed anyway (Google keys: "AIza…").
+    failures.set(input.context.id, detail.replaceAll(/AIza[0-9A-Za-z_-]{20,}/g, '[api key]'));
     return {
       items: [ModelMessageItem.rehydrate({ text: '' })],
       tokenUsage: undefined,
@@ -376,7 +383,7 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
       participant.getId(),
       message,
       {
-        model: config.models[agent.model],
+        model: config.agentModels?.[agent.name] ?? config.models[agent.model],
         context,
         tools,
         structuredOutput: {

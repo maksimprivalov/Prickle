@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { formatEvent } from '@app/cli/terminal';
 import { spendReport } from '@app/cli/spend-report';
-import { createLiveRuntime, loadLiveEnv, newSessionId } from '@app/live-runtime';
+import { createLiveRuntime, describeLive, loadLiveEnv, newSessionId } from '@app/live-runtime';
 import { runSession } from '@app/run-session';
 import { Mandate } from '@core/mandate';
 import { toUsdcUnits } from '@core/money';
@@ -36,9 +36,7 @@ async function main(): Promise<number> {
 
   const startedAt = Date.now();
   runtime.observe('*', (event) => console.log(formatEvent(event, startedAt)));
-  console.log(
-    `Prickle demo · ${wallet.kind} wallet · models ${env.MODEL_FAST} / ${env.MODEL_STRONG}\n`,
-  );
+  console.log(`Prickle demo · ${wallet.kind} wallet · ${describeLive(env)}\n`);
 
   try {
     const result = await runSession({

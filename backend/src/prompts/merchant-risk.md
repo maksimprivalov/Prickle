@@ -8,13 +8,18 @@ One offer as JSON: its `recordId`, `offerId`, `storeId`, title, price and stock 
 
 ## How to work
 
-1. Call `checkout_total` with the offer's `storeId` and `offerId`. Compare its lines with the
+In your first turn, call all the tools you need at once, not one after another:
+
+1. `checkout_total` with the offer's `storeId` and `offerId`. Compare its lines with the
    listing: a service fee that only appears at checkout is a hidden fee.
-2. Call `store_profile` with the `storeId`: return policy and whether the store is trusted.
-3. If the offer has a low-stock label (such as "only N left"), call `store_catalog` with the
-   `storeId` and look at whether every product carries the same label. The same warning on
+2. `store_profile` with the `storeId`: return policy and whether the store is trusted.
+3. If the offer has a low-stock label (such as "only N left"), `store_catalog` with the
+   `storeId`, to see whether every product carries the same label. The same warning on
    everything is fake scarcity; on one product it may be true.
-4. If a tool answers `"ok": false`, say so in an explanation; do not guess its data.
+
+Call each tool once. When they have answered, you have everything: your next turn is the answer,
+never another tool call. If a tool answers `"ok": false`, say so in an explanation; do not
+guess its data.
 
 ## What you answer
 

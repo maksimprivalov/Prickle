@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { retryDelayMs, retryWhenBusy } from './gemini-thought-signatures';
+import { createStickyPicker, retryDelayMs, retryWhenBusy } from './gemini-thought-signatures';
 import { createRequestLimiter } from './request-limiter';
 
 // A fake clock: sleep() moves time forward instead of waiting.
@@ -114,5 +114,28 @@ describe("retryWhenBusy() and the provider's delay", () => {
       },
     );
     expect(waits).toEqual([60_000]);
+  });
+});
+
+describe('createStickyPicker()', () => {
+  it('keeps one loop on one key for its whole life', () => {
+    const pick = createStickyPicker(['key-a', 'key-b'] as const);
+    const first = pick('loop-1');
+    expect([pick('loop-1'), pick('loop-1')]).toEqual([first, first]);
+  });
+
+  it('spreads new loops over the keys in turn', () => {
+    const pick = createStickyPicker(['key-a', 'key-b'] as const);
+    expect(['loop-1', 'loop-2', 'loop-3', 'loop-4'].map(pick)).toEqual([
+      'key-a',
+      'key-b',
+      'key-a',
+      'key-b',
+    ]);
+  });
+
+  it('with one key, gives every loop that key', () => {
+    const pick = createStickyPicker(['key-a'] as const);
+    expect(['loop-1', 'loop-2'].map(pick)).toEqual(['key-a', 'key-a']);
   });
 });
