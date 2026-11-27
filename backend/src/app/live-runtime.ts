@@ -21,6 +21,9 @@ export const LiveEnv = z
     MODEL_STRONG: z.string().min(1).default('gemini-3.5-flash-lite'),
     // Gemini's free tier allows 15 requests per minute per model; stay just under it. 0 = no limit.
     GEMINI_REQUESTS_PER_MINUTE: z.coerce.number().int().min(0).default(14),
+    // Under the free-tier limit a loop spends most of its time waiting for a request slot (the
+    // live run of 27 Nov had calls a minute apart), so loops get six minutes before they fail.
+    LOOP_TIMEOUT_SECONDS: z.coerce.number().int().min(10).default(360),
   })
   .refine((env) => env.GEMINI_API_KEY ?? env.OPENAI_API_KEY ?? env.ANTHROPIC_API_KEY, {
     message: 'No LLM key: put GEMINI_API_KEY=... in backend/.env (see .env.example).',
@@ -62,8 +65,7 @@ export function createLiveRuntime(
       clock: () => new Date(),
       publish: (event) => runtime.publish(event),
     }),
-    // Generous, because a loop may wait for a free request slot under the free-tier limit.
-    loopTimeoutMs: 180_000,
+    loopTimeoutMs: env.LOOP_TIMEOUT_SECONDS * 1000,
     // Keeps Gemini's thought signatures, which Mozaik 6.0.0 drops (docs/mozaik-findings.md).
     ...(usesGemini
       ? { inference: createGeminiSafeRunner({ requestsPerMinute: env.GEMINI_REQUESTS_PER_MINUTE }) }
