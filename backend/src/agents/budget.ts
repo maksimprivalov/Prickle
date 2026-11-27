@@ -1,6 +1,7 @@
 import { BudgetAnswer } from '@core/budget/budget-answer';
 import type { Mandate } from '@core/mandate';
 import type { Offer, CheckoutBreakdown } from '@core/offers';
+import type { ReviewDone } from '@core/events';
 import type { Verdict } from '@core/verdicts';
 import { ModelTier, defineAgent, type ToolSpec } from '@runtime/port';
 
@@ -22,13 +23,15 @@ export type Candidate = {
   readonly offer: Offer;
   readonly checkout: CheckoutBreakdown | undefined;
   readonly verdicts: readonly Verdict[];
+  /** The reviewer's final word; undefined when the review never came (then it is not payable). */
+  readonly review: ReviewDone | undefined;
 };
 
 /** The message the budget loop starts with: the mandate and every candidate with its records. */
 export function budgetMessage(mandate: Mandate, candidates: readonly Candidate[]): string {
   return JSON.stringify({
     mandate,
-    candidates: candidates.map(({ offer, checkout, verdicts }) => ({
+    candidates: candidates.map(({ offer, checkout, verdicts, review }) => ({
       offerId: offer.offerId,
       title: offer.title,
       storeId: offer.storeId,
@@ -39,6 +42,7 @@ export function budgetMessage(mandate: Mandate, candidates: readonly Candidate[]
         decision: v.decision,
         reasons: v.reasons.map((r) => r.code),
       })),
+      review: review ? { decision: review.decision, why: review.reasons[0]?.text ?? '' } : null,
     })),
   });
 }

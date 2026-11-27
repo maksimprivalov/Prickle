@@ -35,8 +35,9 @@ scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live with
 and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`) exist. `pnpm demo` runs on Mozaik
 with the interim plain-code merchant-risk check (`app/interim-merchant-risk.ts`) until Tara's
 merchant-risk agent replaces it. Number grounding (fix 1: `core/grounding`, wired in
-`app/grounding-check.ts`) runs on the checkers' and the budget agent's answers; the reviewer is
-not wired yet.
+`app/grounding-check.ts`) runs on the checkers', the reviewer's and the budget agent's answers. The reviewer
+(`agents/reviewer.ts`, decision in `core/review`) resolves the two checkers per offer and logs
+disagreements as `review.done` (fix 4b); the budget agent pays only reviewed passes.
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend

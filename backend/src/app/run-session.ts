@@ -1,5 +1,6 @@
 import { budgetMessage, createBudgetAgent, type Candidate } from '@agents/budget';
 import { startDealVerifier } from '@agents/deal-verifier';
+import { startReviewer } from '@agents/reviewer';
 import { startScouts, type ScoutRun } from '@agents/start-scouts';
 import { NOT_FINANCIAL_ADVICE } from '@core/disclaimer/disclaimer';
 import {
@@ -7,6 +8,7 @@ import {
   GuardReasonCode,
   type GuardReason,
   type PrickleEvent,
+  type ReviewDone,
   type SessionOutcome,
 } from '@core/events';
 import type { Mandate } from '@core/mandate';
@@ -22,9 +24,11 @@ import { startInterimMerchantRisk } from './interim-merchant-risk';
 // One shopping session, on whichever runtime adapter it is given:
 //   1. five scouts start together; each offer.found wakes the deal verifier and merchant risk,
 //      which check it while the other scouts are still searching;
-//   2. when everything has settled, the budget agent pays the cheapest offer that passed, through
-//      pay(), which the mandate guard protects twice (interception, then inside pay());
-//   3. session.ended says what happened, with the disclaimer.
+//   2. once both checkers have judged an offer, the reviewer resolves their verdicts (logging
+//      any disagreement) and publishes review.done;
+//   3. when everything has settled, the budget agent pays the cheapest offer the review passed,
+//      through pay(), which the mandate guard protects twice (interception, then inside pay());
+//   4. session.ended says what happened, with the disclaimer.
 
 export type SessionState = {
   /** As the user set it. The guard reads it from here, never from agent output. */
@@ -37,6 +41,7 @@ export type SessionResult = {
   readonly ledger: Ledger;
   readonly scouts: readonly ScoutRun[];
   readonly verdicts: readonly Verdict[];
+  readonly reviews: readonly ReviewDone[];
 };
 
 const guardToReason: Partial<Record<GuardReason['code'], ReasonCode>> = {
@@ -52,15 +57,13 @@ function checkoutOf(runtime: Runtime<PrickleEvent, SessionState>, offerId: strin
   })[0];
 }
 
-/** Why the best offer falls outside the mandate: the checkers' rejections and the guard's. */
+/** Why the best offer falls outside the mandate: the review's reasons and the guard's. */
 function whyNot(
   offer: Offer,
-  verdicts: readonly Verdict[],
+  review: ReviewDone | undefined,
   guard: readonly GuardReason[],
 ): Reason[] {
-  const fromCheckers = verdicts
-    .filter((v) => v.offerId === offer.offerId && v.decision !== 'pass')
-    .flatMap((v) => v.reasons);
+  const fromCheckers = review && review.decision !== 'pass' ? review.reasons : [];
   const fromGuard = guard.flatMap((r): Reason[] => {
     const code = guardToReason[r.code];
     const [first, ...rest] = r.sources;
@@ -97,7 +100,7 @@ export async function runSession(options: {
       outcome,
       disclaimer: NOT_FINANCIAL_ADVICE,
     });
-    return { outcome, ledger, scouts, verdicts };
+    return { outcome, ledger, scouts, verdicts, reviews: [...reviews.values()] };
   };
 
   runtime.publish({ ...base('app'), type: EventName.SessionStarted, mandate });
@@ -106,6 +109,9 @@ export async function runSession(options: {
   const onVerdict = (verdict: Verdict) => verdicts.push(verdict);
   startDealVerifier(runtime, { client, clock, onVerdict });
   const merchantRisk = startInterimMerchantRisk(runtime, { client, clock, onVerdict });
+  // The reviewer reacts to their answers; nobody calls it either.
+  const reviews = new Map<string, ReviewDone>();
+  startReviewer(runtime, { clock, onReview: (review) => reviews.set(review.offerId, review) });
 
   const paySession = {
     sessionId: runtime.sessionId,
@@ -139,6 +145,7 @@ export async function runSession(options: {
     offer,
     checkout: checkoutOf(runtime, offer.offerId),
     verdicts: verdicts.filter((v) => v.offerId === offer.offerId),
+    review: reviews.get(offer.offerId),
   }));
   const budget = createBudgetAgent(createPayTool(paySession));
   const answer = await runtime.start(budget, budgetMessage(mandate, candidates)).done;
@@ -151,8 +158,11 @@ export async function runSession(options: {
     return end({ kind: 'failed', detail: `the budget agent failed: ${answer.detail}` });
   }
 
-  // The best option: fewest checker objections first, then the lowest checkout total.
-  const objections = (c: Candidate) => c.verdicts.filter((v) => v.decision !== 'pass').length;
+  // The best option: a review that passed first, then fewest checker objections, then the
+  // lowest checkout total.
+  const objections = (c: Candidate) =>
+    (c.review?.decision === 'pass' ? 0 : 10) +
+    c.verdicts.filter((v) => v.decision !== 'pass').length;
   const ranked = [...candidates].sort(
     (a, b) =>
       objections(a) - objections(b) ||
@@ -162,6 +172,8 @@ export async function runSession(options: {
   return end({
     kind: 'no_fit',
     ...(best ? { bestOfferId: best.offerId } : {}),
-    reasons: best ? whyNot(best, verdicts, guardDenials.get(best.offerId) ?? []) : [],
+    reasons: best
+      ? whyNot(best, reviews.get(best.offerId), guardDenials.get(best.offerId) ?? [])
+      : [],
   });
 }
