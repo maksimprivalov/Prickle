@@ -92,6 +92,7 @@ backend/
 | Judge mode: one mandate end to end, synthetic data, mock wallet | `pnpm demo` |
 | Same with a real devnet payment | `PAYMENTS=devnet pnpm demo` |
 | Eval: every offer through Prickle, trap table from the log | `pnpm eval` |
+| Concurrency table (fix 5) from a run log: wall-clock vs summed loop time | `pnpm timing [runs/<session>.jsonl]` |
 | Session server + mock stores (for the frontend) | `pnpm dev` |
 | Regenerate synthetic data (seeded) | `pnpm gen:data` |
 | Devnet wallet: keypair in `.wallet/`, SOL airdrop | `pnpm wallet:setup` |
@@ -214,8 +215,11 @@ agents, the guard, the sources or the eval.
     concurrent agents the free tier answers 429 "exceeded your current quota". A full `pnpm demo`
     (5 scouts + 2 checkers per offer + reviewer) makes more calls than the scout run. Measure a
     full run's call count before the demo.
-- **Mozaik Cloud:** `@mozaik-ai/cloud-sdk` 0.1.5 (a dependency of core) declares peer core
-  `^4 || ^5`. Check that pairing works with core 6 early; if not, pin core to 5.0.1.
+- **Mozaik Cloud (27 Nov):** this machine is paired (`npx @mozaik-ai/cloud-sdk pair`; the key is in
+  `~/.mozaik/credentials.json`, outside the repo) and the Cloud client reports `enabled: true`
+  with core 6, although `@mozaik-ai/cloud-sdk` 0.1.5 declares peer core `^4 || ^5`. Mozaik's own
+  loop publisher sends every loop event once paired; the timeline screenshot comes from the next
+  live `pnpm demo`. Without pairing the client is a no-op, so judge mode is unaffected.
 - **Devnet (checked 26 Nov):** `pnpm wallet:setup` works: genesis hash checked, Circle's devnet
   USDC mint `4zMMC9…DncDU` exists with 6 decimals. Two blockers for the Thu 17:00 decision:
   - the RPC airdrop is closed on devnet (410), so test SOL comes from https://faucet.solana.com

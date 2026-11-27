@@ -79,14 +79,53 @@ Checks that are code, not prompts:
 
 ## How the agents run concurrently
 
-*(from the run log — `pnpm eval` rebuilds this table)*
+Every agent is its own Mozaik participant with its own loop. The five scouts are five agents,
+one per store, each with only its own store's catalog tool, started with `runLoop` together and
+never awaited one by one. The deal verifier and merchant risk are situation handlers on
+`offer.found`: they start on each offer as it appears, while the other scouts are still
+searching. The reviewer reacts to their verdicts, and the guard is Mozaik interception in front
+of `pay()`.
 
-| | Wall-clock | Sum of individual times |
-| --- | --- | --- |
-| 5 scouts | — | — |
-| Checkers on all offers | — | — |
+**Proof from the run log.** The runtime writes `loop.started` and `loop.finished` for every
+loop, so wall-clock time can be set against the loops' summed time. Run `pnpm timing` (newest
+log in `runs/`) or `pnpm timing runs/<session>.jsonl`:
 
-Mozaik Cloud timeline: pair with `npx @mozaik-ai/cloud-sdk pair` and run `pnpm demo`.
+*From the committed `runs/sample-run.jsonl` (a live run on Gemini's free tier, 27 Nov), by
+`pnpm timing runs/sample-run.jsonl`. Under the free-tier limit of 15 requests per minute per
+model, calls wait for a free slot, so most of the summed time is waiting: "Most at once" is the
+cleanest measure here. In this run scout E did not answer within the loop timeout, and the two
+checker loops on Store C timed out too; C's verdicts then came from the same rules in code.*
+
+| | Loops | Wall-clock | Sum of individual times | Sum ÷ wall | Most at once |
+| --- | --: | --: | --: | --: | --: |
+| 5 scouts | 5 | 180.0 s | 248.1 s | 1.3× | 5 |
+| Checkers on all offers | 8 | 183.0 s | 848.8 s | 4.6× | 8 |
+| All agent loops | 18 | 187.3 s | 1160.5 s | 6.1× | 9 |
+
+```text
+scout-a#1       |█                                                 | 2.1 s
+scout-b#1       |████████████████                                  | 61.0 s
+scout-c#1       |█                                                 | 2.5 s
+scout-d#1       |█                                                 | 2.3 s
+scout-e#1       |████████████████████████████████████████████████  | 180.0 s  failed
+deal-verifier#1 | ████████████████                                 | 61.3 s
+merchant-risk#1 | ███████████████████████████████                  | 119.2 s
+deal-verifier#2 | ████████████████                                 | 61.0 s
+merchant-risk#2 | ████████████████                                 | 61.0 s
+deal-verifier#3 | ████████████████████████████████████████████████ | 180.0 s  failed
+merchant-risk#3 | ████████████████████████████████████████████████ | 180.0 s  failed
+deal-verifier#4 |                █████████████████████████████████ | 124.1 s
+merchant-risk#4 |                █████████████████                 | 61.9 s
+reviewer#1      |                 ████████████████                 | 58.9 s
+reviewer#2      |                                █                 | 1.2 s
+reviewer#3      |                                                 █| 1.2 s
+reviewer#4      |                                                 █| 0.8 s
+budget#1        |                                                  █| 1.2 s
+```
+
+**Mozaik Cloud timeline.** Pair this machine once with `npx @mozaik-ai/cloud-sdk pair` (it
+prints a code and a link to approve at app.jigjoy.ai), then run `pnpm demo`: the five scout loops
+show side by side in the project's timeline, with no code change.
 
 ## Eval
 
@@ -123,6 +162,7 @@ runs/              run logs; sample-run.jsonl is committed
 | --- | --- |
 | `pnpm demo` | One mandate end to end (judge mode) |
 | `pnpm eval` | Every offer through Prickle; trap and timing tables from the log |
+| `pnpm timing [runs/<session>.jsonl]` | The concurrency table and per-loop lanes from a run log (newest by default) |
 | `pnpm dev` | Session server + mock stores, for the frontend |
 | `pnpm gen:data` | Regenerate `data/fixtures/` from the seeded generator |
 | `pnpm wallet:setup` | Devnet keypair + SOL airdrop |
