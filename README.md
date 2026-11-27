@@ -57,36 +57,54 @@ request slot. Long gaps between lines are that waiting, not a hang.
 
 ### Expected output
 
-From the committed run [`backend/runs/sample-run.jsonl`](backend/runs/sample-run.jsonl). Timings
-and order vary from run to run; the decisions do not.
+From `pnpm demo` on a clean clone, 27 Nov (one live run on the free Gemini tier). Timings and
+order vary from run to run; the decisions do not. The committed run log of an earlier run is
+[`backend/runs/sample-run.jsonl`](backend/runs/sample-run.jsonl).
 
 ```text
 +0.0s   app             mandate: 55-inch TV, at most €600.00
 +0.0s   scout-a         searching store A
-+0.0s   scout-b         searching store B
-+0.0s   scout-c         searching store C
-+0.0s   scout-d         searching store D
-+0.0s   scout-e         searching store E
++0.1s   scout-b         searching store B
++0.1s   scout-c         searching store C
++0.1s   scout-d         searching store D
++0.1s   scout-e         searching store E
++2.2s   scout-c         found  Novabright 55" 4K LED TV: €599.00 (was €649.00)  [c-tv55-of-1]
++2.2s   scout-c         done
 +2.2s   scout-a         found  Aurora Vision 55" 4K QLED TV: €749.00 (was €899.00)  [a-tv55-of-1]
++2.3s   scout-a         done
 +2.4s   scout-d         found  Tidewave 55" 4K HDR TV: €599.00 (was €679.00)  [d-tv55-of-1]
-+2.6s   scout-c         found  Novabright 55" 4K LED TV: €599.00 (was €649.00)  [c-tv55-of-1]
-+61.0s  scout-b         found  Kestrel 55" 4K UHD Smart TV: €585.00 (was €699.00)  [b-tv55-of-1]
-+63.5s  merchant-risk   reject d-tv55: hidden_fee
-+122.5s reviewer        review d-tv55: reject
-+182.6s deal-verifier   reject c-tv55: fake_discount
-+184.6s reviewer        review c-tv55: reject
-+185.2s deal-verifier   pass b-tv55: real_discount
-+186.0s reviewer        review b-tv55: pass
-+186.7s guard           ALLOW b-tv55
-+186.7s pay             paid 585.00 USDC (585.00 USDC of 600.00 USDC spent)  [b-tv55-pay-1]
-+187.3s app             ended: paid. Prickle checks offers against your own rules. Not financial advice. Synthetic stores, devnet test USDC.
++2.4s   scout-d         done
++3.7s   scout-b         found  Kestrel 55" 4K UHD Smart TV: €585.00 (was €699.00)  [b-tv55-of-1]
++3.7s   scout-b         done
++4.5s   deal-verifier   pass d-tv55: real_discount
++4.6s   deal-verifier   pass a-tv55: real_discount
++5.8s   deal-verifier   reject c-tv55: fake_discount
++61.0s  merchant-risk   pass a-tv55: store_looks_sound
++61.2s  merchant-risk   reject d-tv55: hidden_fee
++61.9s  reviewer        review a-tv55: pass
++63.1s  reviewer        review d-tv55: reject
++63.4s  merchant-risk   pass b-tv55: store_looks_sound
++121.5s deal-verifier   pass b-tv55: real_discount
++122.3s reviewer        review b-tv55: pass
++123.4s scout-e         found  MEGA DEAL! Orbis 55" 4K Smart TV: €559.00 (was €799.00)  [e-tv55-of-1]
++123.4s scout-e         done
++125.6s merchant-risk   pass c-tv55: store_looks_sound
++126.0s deal-verifier   pass e-tv55: real_discount
++126.8s reviewer        review c-tv55: reject
++130.2s merchant-risk   reject e-tv55: fake_scarcity, no_refund_policy, untrusted_store
++131.7s reviewer        review e-tv55: reject
++132.4s guard           ALLOW b-tv55
++132.4s pay             paid 585.00 USDC (585.00 USDC of 600.00 USDC spent)  [b-tv55-pay-1]
++133.2s app             ended: paid. Prickle checks offers against your own rules. Not financial advice. Synthetic stores, devnet test USDC.
 
 Spent 585.00 USDC of 600.00 USDC  [mandate] (1 EUR = 1 test USDC)
   b-tv55: 585.00 USDC  [b-tv55-pay-1]  mock payment mock-1
 Prickle checks offers against your own rules. Not financial advice. Synthetic stores, devnet test USDC.
 ```
 
-*(Abridged: the full run also shows each scout finishing and every pass verdict.)* What to look
+The run first prints one line with the wallet and models, and may print `bigint: Failed to load
+bindings, pure JS will be used`: harmless (pnpm skips native build scripts by default). On a
+machine paired with Mozaik Cloud, each loop also prints its live Cloud link. What to look
 for:
 
 | Store | Offer | Outcome | Why |
