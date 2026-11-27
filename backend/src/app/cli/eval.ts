@@ -5,7 +5,7 @@ import { evalReport, formatEvalReport } from '@app/eval/eval-report';
 import { runEval } from '@app/eval/run-eval';
 import { scriptedModel } from '@app/eval/scripted-model';
 import { createGroundingCheck } from '@app/grounding-check';
-import { LlmEnv, llmRuntimeOptions } from '@app/llm-config';
+import { createLiveRuntime, describeLive, loadLiveEnv, newSessionId } from '@app/live-runtime';
 import type { SessionState } from '@app/run-session';
 import { NOT_FINANCIAL_ADVICE } from '@core/disclaimer/disclaimer';
 import type { PrickleEvent } from '@core/events';
@@ -13,7 +13,6 @@ import { Mandate } from '@core/mandate';
 import { toUsdcUnits } from '@core/money';
 import { TrapEntry } from '@core/traps';
 import { createMockWallet } from '@payments/mock-wallet';
-import { createMozaikRuntime } from '@runtime/mozaik/mozaik-runtime';
 import { createPlainRuntime } from '@runtime/plain/plain-runtime';
 import type { Runtime } from '@runtime/port';
 import { RunLogLine, createJsonlRunLog } from '@runtime/run-log';
@@ -56,46 +55,43 @@ async function main(): Promise<number> {
   const mandate = readFixture('demo-mandate.json', Mandate);
   const key = readFixture('traps.json', z.array(TrapEntry));
 
-  const stamp = new Date().toISOString().replaceAll(/[:.]/g, '-').toLowerCase();
-  const sessionId = `eval-${scripted ? 'scripted' : 'live'}-${stamp}`;
+  const sessionId = newSessionId(`eval-${scripted ? 'scripted' : 'live'}`);
   const logPath = `runs/${sessionId}.jsonl`;
   const clock = () => new Date();
-  const state: SessionState = { mandate, verdicts: [] };
 
   let runtime: Runtime<PrickleEvent, SessionState>;
-  const checkOutput = () =>
-    createGroundingCheck({ sessionId, mandate, clock, publish: (e) => runtime.publish(e) });
   let describe: string;
   if (scripted) {
     runtime = createPlainRuntime<PrickleEvent, SessionState>({
       sessionId,
-      state,
+      state: { mandate, verdicts: [] },
       driver: scriptedModel,
       log: createJsonlRunLog(logPath),
       clock,
-      checkOutput: checkOutput(),
+      checkOutput: createGroundingCheck({
+        sessionId,
+        mandate,
+        clock,
+        publish: (e) => runtime.publish(e),
+      }),
     });
     describe = 'plain runtime, scripted model (no LLM)';
   } else {
-    const env = LlmEnv.safeParse(process.env);
-    if (!env.success) {
-      console.error(env.error.issues.map((i) => i.message).join('\n'));
+    // The same live runtime as pnpm demo and the session server.
+    const loaded = loadLiveEnv();
+    if (!loaded.ok) {
+      console.error(loaded.message);
       console.error('Or run without an LLM: pnpm eval --scripted');
       return 1;
     }
-    const llm = llmRuntimeOptions(env.data, process.env);
-    runtime = createMozaikRuntime<PrickleEvent, SessionState>({
-      sessionId,
-      state,
-      log: createJsonlRunLog(logPath),
-      models: llm.models,
-      agentModels: llm.agentModels,
-      checkOutput: checkOutput(),
-      // Forty offers at once wait long for free-tier request slots.
-      loopTimeoutMs: 600_000,
-      ...(llm.inference ? { inference: llm.inference } : {}),
-    });
-    describe = `Mozaik, ${llm.describe}`;
+    // Forty offers at once wait long for free-tier request slots: at least 20 minutes per loop
+    // (the demo's 6 would fail the last ones in line).
+    const env = {
+      ...loaded.env,
+      LOOP_TIMEOUT_SECONDS: Math.max(loaded.env.LOOP_TIMEOUT_SECONDS, 1200),
+    };
+    runtime = createLiveRuntime(env, { sessionId, mandate, log: createJsonlRunLog(logPath) });
+    describe = `Mozaik, ${describeLive(env)}`;
   }
 
   const startedAt = Date.now();

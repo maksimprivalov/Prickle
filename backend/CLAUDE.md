@@ -41,8 +41,10 @@ exist. Number grounding (fix 1: `core/grounding`, wired in `app/grounding-check.
 checkers', the reviewer's and the budget agent's answers. `pnpm eval` (`app/eval/`,
 `app/cli/eval.ts`) runs every offer through the checkers, the reviewer and the guard and rebuilds
 its tables from the run log: live on Mozaik by default, `--scripted` with no LLM,
-`--offers tv55` for the demo TVs only. Model and key settings for both live commands are in
-`app/llm-config.ts`. `dev` is a stub that exits 1. When a folder does not exist
+`--offers tv55` for the demo TVs only. `pnpm dev` runs the session server (`app/server/`:
+`POST /api/sessions`, SSE at `GET /api/sessions/:id/events`, one session at a time). All live
+runs (demo, eval, server) build their runtime in `app/live-runtime.ts`, with models, keys and
+request limits from `app/llm-config.ts`. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
 imports it without our path aliases.
@@ -95,6 +97,7 @@ backend/
 | Judge mode: one mandate end to end, synthetic data, mock wallet | `pnpm demo` |
 | Same with a real devnet payment | `PAYMENTS=devnet pnpm demo` |
 | Eval: every offer through Prickle, trap table from the log | `pnpm eval` |
+| Concurrency table (fix 5) from a run log: wall-clock vs summed loop time | `pnpm timing [runs/<session>.jsonl]` |
 | Session server + mock stores (for the frontend) | `pnpm dev` |
 | Regenerate synthetic data (seeded) | `pnpm gen:data` |
 | Devnet wallet: keypair in `.wallet/`, SOL airdrop | `pnpm wallet:setup` |
@@ -224,8 +227,11 @@ agents, the guard, the sources or the eval.
     of the 20/day cap. Judge mode still needs one key. A full `pnpm demo` on one free key took
     about 4 minutes on 27 Nov, almost all of it waiting for request slots; the live eval on the
     demo TVs (`pnpm eval --offers tv55`) about 3 minutes.
-- **Mozaik Cloud:** `@mozaik-ai/cloud-sdk` 0.1.5 (a dependency of core) declares peer core
-  `^4 || ^5`. Check that pairing works with core 6 early; if not, pin core to 5.0.1.
+- **Mozaik Cloud (27 Nov):** this machine is paired (`npx @mozaik-ai/cloud-sdk pair`; the key is in
+  `~/.mozaik/credentials.json`, outside the repo) and the Cloud client reports `enabled: true`
+  with core 6, although `@mozaik-ai/cloud-sdk` 0.1.5 declares peer core `^4 || ^5`. Mozaik's own
+  loop publisher sends every loop event once paired; the timeline screenshot comes from the next
+  live `pnpm demo`. Without pairing the client is a no-op, so judge mode is unaffected.
 - **Devnet (checked 26 Nov):** `pnpm wallet:setup` works: genesis hash checked, Circle's devnet
   USDC mint `4zMMC9…DncDU` exists with 6 decimals. Two blockers for the Thu 17:00 decision:
   - the RPC airdrop is closed on devnet (410), so test SOL comes from https://faucet.solana.com

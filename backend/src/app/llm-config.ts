@@ -13,24 +13,29 @@ import type { MozaikRuntimeConfig } from '@runtime/mozaik/mozaik-runtime';
 // that scales, and another model for the reviewer (MODEL_REVIEWER), a small one: measured 27
 // Nov, gemini-3.5-flash allows only 5 requests a minute and 20 a day.
 
-export const LlmEnv = z
-  .object({
-    GEMINI_API_KEY: z.string().min(1).optional(),
-    OPENAI_API_KEY: z.string().min(1).optional(),
-    ANTHROPIC_API_KEY: z.string().min(1).optional(),
-    // gemini-3.5-flash was overloaded (503) on every run on 26 Nov; the lite model was not.
-    MODEL_FAST: z.string().min(1).default('gemini-3.5-flash-lite'),
-    MODEL_STRONG: z.string().min(1).default('gemini-3.5-flash-lite'),
-    // Default: MODEL_STRONG. Set to gemini-3.5-flash to move the reviewer's calls (one per
-    // offer) to that model's free quota; its decision is code, so a failed call only loses the
-    // agent's wording. Worth it for a demo or two a day, not for a full live eval (20/day cap).
-    MODEL_REVIEWER: z.string().min(1).optional(),
-    // Unset: each model's free-tier limit minus one. A number: that for every model. 0: no limit.
-    GEMINI_REQUESTS_PER_MINUTE: z.coerce.number().int().min(0).optional(),
-  })
-  .refine((env) => env.GEMINI_API_KEY ?? env.OPENAI_API_KEY ?? env.ANTHROPIC_API_KEY, {
-    message: 'No LLM key: put GEMINI_API_KEY=... in backend/.env (see .env.example).',
-  });
+/** The fields, so app/live-runtime.ts can add its own (loop timeout) to the same schema. */
+export const llmEnvFields = {
+  GEMINI_API_KEY: z.string().min(1).optional(),
+  OPENAI_API_KEY: z.string().min(1).optional(),
+  ANTHROPIC_API_KEY: z.string().min(1).optional(),
+  // gemini-3.5-flash was overloaded (503) on every run on 26 Nov; the lite model was not.
+  MODEL_FAST: z.string().min(1).default('gemini-3.5-flash-lite'),
+  MODEL_STRONG: z.string().min(1).default('gemini-3.5-flash-lite'),
+  // Default: MODEL_STRONG. Set to gemini-3.5-flash to move the reviewer's calls (one per
+  // offer) to that model's free quota; its decision is code, so a failed call only loses the
+  // agent's wording. Worth it for a demo or two a day, not for a full live eval (20/day cap).
+  MODEL_REVIEWER: z.string().min(1).optional(),
+  // Unset: each model's free-tier limit minus one. A number: that for every model. 0: no limit.
+  GEMINI_REQUESTS_PER_MINUTE: z.coerce.number().int().min(0).optional(),
+};
+export type LlmSettings = z.infer<z.ZodObject<typeof llmEnvFields>>;
+
+/** Judge mode's one requirement: some LLM key. */
+export const hasLlmKey = (env: LlmSettings): boolean =>
+  Boolean(env.GEMINI_API_KEY ?? env.OPENAI_API_KEY ?? env.ANTHROPIC_API_KEY);
+export const NO_LLM_KEY = 'No LLM key: put GEMINI_API_KEY=... in backend/.env (see .env.example).';
+
+export const LlmEnv = z.object(llmEnvFields).refine(hasLlmKey, { message: NO_LLM_KEY });
 export type LlmEnv = z.infer<typeof LlmEnv>;
 
 /** GEMINI_API_KEY, then GEMINI_API_KEY_2, _3, ... in order, without empties or repeats. */
@@ -50,7 +55,7 @@ export function geminiKeys(env: Readonly<Record<string, string | undefined>>): s
 }
 
 /** Requests per minute for one model: just under its free-tier limit, unless the env says. */
-export function requestsPerMinute(env: LlmEnv, model: string): number {
+export function requestsPerMinute(env: LlmSettings, model: string): number {
   if (env.GEMINI_REQUESTS_PER_MINUTE !== undefined) return env.GEMINI_REQUESTS_PER_MINUTE;
   const free = GEMINI_FREE_TIER_REQUESTS_PER_MINUTE[model];
   // An unknown Gemini model gets the strictest known limit rather than none.
@@ -62,7 +67,7 @@ export function requestsPerMinute(env: LlmEnv, model: string): number {
 
 /** The model part of a Mozaik runtime config, from the parsed env and the raw env (keys). */
 export function llmRuntimeOptions(
-  env: LlmEnv,
+  env: LlmSettings,
   rawEnv: Readonly<Record<string, string | undefined>>,
 ): Pick<MozaikRuntimeConfig<unknown>, 'models' | 'agentModels' | 'inference'> & {
   readonly keyCount: number;
