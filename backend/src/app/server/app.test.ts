@@ -88,7 +88,29 @@ describe('POST /api/sessions', () => {
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({
       sessionId: expect.stringMatching(/^web-\d+$/) as string,
+      mode: 'live',
     });
+  });
+
+  it('says so when the server replays a recorded run', async () => {
+    const hub = createSessionHub({ run: controlledRunner().runner, newSessionId: () => 'r-1' });
+    const app = createSessionApp(hub, { mode: 'replay' });
+    const response = await app.request('/api/sessions', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(fixtures.mandate),
+    });
+    expect(await response.json()).toEqual({ sessionId: 'r-1', mode: 'replay' });
+    expect(await (await app.request('/api/health')).json()).toEqual({ ok: true, mode: 'replay' });
+  });
+
+  it('also allows the origins it is given, e.g. a deployed domain', async () => {
+    const hub = createSessionHub({ run: controlledRunner().runner, newSessionId: () => 'r-2' });
+    const app = createSessionApp(hub, { origins: ['https://prickle.example.com'] });
+    const response = await app.request('/api/health', {
+      headers: { Origin: 'https://prickle.example.com' },
+    });
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://prickle.example.com');
   });
 
   it('refuses a body that is not JSON, or not a mandate', async () => {

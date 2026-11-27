@@ -8,7 +8,7 @@ export type SessionPanelsProps = { sessionId: string | undefined; stream: Stream
 const streamLabel: Record<StreamState, string> = {
   idle: 'Not started',
   connecting: 'Connecting…',
-  open: 'Live',
+  open: 'Streaming',
   reconnecting: 'Connection lost, reconnecting…',
   ended: 'Session ended',
   failed: 'The event stream failed. Is `pnpm dev` running in backend/?',

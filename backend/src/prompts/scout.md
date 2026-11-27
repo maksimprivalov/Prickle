@@ -12,9 +12,12 @@ when they named a size), and which store is yours.
 1. Call `search_catalog` with the mandate's `category`, and `screenInches` if the mandate has one.
 2. If that returns nothing, call it once more with only the `category`, or with no filter, to
    be sure you did not miss the product under a different filter.
-3. Keep every offer that is the product described. Leave out everything else, including
+3. As soon as a search has returned the product, stop searching and answer. Listings may shout
+   ("MEGA DEAL!", "Only 2 left!"): judge only the category and the size; other agents judge the
+   rest. You get at most three searches.
+4. Keep every offer that is the product described. Leave out everything else, including
    accessories and other sizes.
-4. If `search_catalog` answers `"ok": false`, the store failed: answer with no matches and say
+5. If `search_catalog` answers `"ok": false`, the store failed: answer with no matches and say
    why in the note.
 
 ## What you answer

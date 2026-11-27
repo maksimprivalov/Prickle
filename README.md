@@ -12,6 +12,11 @@ Built on [`@mozaik-ai/core`](https://www.npmjs.com/package/@mozaik-ai/core) 6.0.
 Black Friday AI Hackathon (26–27 November 2026, track *Agentic Payments*) by Maksim Privalov and
 Tara Petričić.
 
+**See the demo: [`docs/demo.md`](docs/demo.md)**, a walkthrough of a real run, screen by screen,
+with screenshots and what each one proves. A demo video follows. To run it yourself without a
+key, `pnpm install && pnpm dev:replay` replays that run; with a Gemini key, `pnpm demo` runs it
+live (see [Run it](#run-it)).
+
 ## What it does
 
 Black Friday shoppers lose money three ways: discounts that are not real, fees that appear only
@@ -118,12 +123,16 @@ for:
 ### The web view (optional)
 
 ```bash
-pnpm dev     # session server on :8787 and the page on http://localhost:5173
+pnpm dev          # live: session server on :8787 and the page on http://localhost:5173
+pnpm dev:replay   # no key needed: streams the committed recorded run instead
 ```
 
-Keep the default mandate or change it, press **Start shopping**, and watch the scouts run side by
+Keep the default mandate or change it, press **Shop for me**, and watch the scouts run side by
 side, each offer's verdicts with their sources, the guard's decision and the spend report. Same
-run as `pnpm demo`, streamed over Server-Sent Events. Details: [`frontend/README.md`](frontend/README.md).
+run as `pnpm demo`, streamed over Server-Sent Events. `pnpm dev:replay` replays
+`backend/runs/sample-run.jsonl` with no model call and says so in a banner on the page. Details:
+[`frontend/README.md`](frontend/README.md); walkthrough with screenshots:
+[`docs/demo.md`](docs/demo.md); your own server and domain: [`docs/deploy.md`](docs/deploy.md).
 
 ### Eval (optional)
 
@@ -138,6 +147,17 @@ pnpm eval                # every offer on the live LLM: slow on a free key
 `PAYMENTS=devnet pnpm demo` pays with test USDC on Solana devnet and prints a Solana Explorer link
 per payment. It needs a funded devnet wallet first (`pnpm --filter @prickle/backend wallet:setup`);
 see [`backend/README.md`](backend/README.md).
+
+## Screenshots
+
+The page streaming the committed run (replay mode). Walkthrough of every screen:
+[`docs/demo.md`](docs/demo.md).
+
+| Five scouts at once, then the checkers and the reviewer | Every verdict with its sources; disagreements resolved |
+| --- | --- |
+| ![Agents at work](docs/screenshots/05-timeline.png) | ![Offers and verdicts](docs/screenshots/06-offers-and-verdicts.png) |
+| **The mandate** | **The guard's decision and the spend, every number with its record** |
+| ![The mandate form](docs/screenshots/01-mandate-form.png) | ![Decision and spend](docs/screenshots/07-guard-and-spend.png) |
 
 ## Eval
 
@@ -174,7 +194,7 @@ guard still blocked it at €749: the guard does not depend on the agents gettin
 | Shopping session | one runtime | — |
 | Mandate, offers, verdicts, budget, wallet | shared state | — |
 | 5 scouts, one per store | 5 agents started with `runLoop`, never awaited one by one | yes, all 5 at once |
-| Budget agent | agent started with the scouts | yes |
+| Budget agent | agent started once the reviews are in; pays through `pay()` | — |
 | Deal verifier, merchant risk | situation handlers on `offer.found` | yes, both on every offer, while scouts still search |
 | Reviewer | reacts to the checkers' verdicts | yes |
 | Catalog, price history, checkout total, `pay()` | tools | — |
@@ -223,7 +243,7 @@ Gemini agent that calls a tool could finish. Cause, reproduction and our workaro
 backend/    agents on @mozaik-ai/core, mandate guard, tools, mock stores, payments,
             synthetic data and its generator, eval, CLI and session server
 frontend/   Vite + React page: send a mandate, watch the run stream in
-docs/       Mozaik findings
+docs/       demo walkthrough with screenshots, deploy guide, Mozaik findings
 prickle-idea.md   the design document
 ```
 
