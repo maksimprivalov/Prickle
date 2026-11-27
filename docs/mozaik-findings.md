@@ -85,3 +85,11 @@ transition or a semantic event the participant can react to.
   back-to-back runs of five concurrent agents.
 - **What we do.** Retry both errors up to three times (after 1 s, 2 s and 4 s) in the same
   runner, and use `gemini-3.5-flash-lite` by default.
+- **Free quotas are per model and per Google project** (measured 27 Nov from Gemini's own 429
+  answers, which name the limit): `gemini-3.5-flash-lite` 15 requests/min,
+  `gemini-3.5-flash` 5/min and 20/day, `gemini-3.1-pro-preview` none; `gemini-3.8-flash`
+  answered 503. So the runner throttles each model just under its own limit, the reviewer can
+  be moved to `gemini-3.5-flash` (`MODEL_REVIEWER`, opt-in because of the daily cap), and extra
+  keys from other projects (`GEMINI_API_KEY_2`, …) add theirs. Mozaik's `GeminiGenerateContent` takes an `apiKey` in its
+  constructor, so this needs one endpoint per key; each agent loop (one Mozaik context id) stays
+  on one key, so a thought signature is never sent to another project.

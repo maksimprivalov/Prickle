@@ -35,8 +35,11 @@ function partsOf(message: unknown): Json[] {
 const callOf = (part: Json): Json | undefined =>
   isRecord(part.functionCall) ? part.functionCall : undefined;
 
-export function keepThoughtSignatures(inner: Mapper): Mapper {
-  const signatures = new Map<string, string>();
+/** `signatures` can be shared, so endpoints for several API keys use one memory. */
+export function keepThoughtSignatures(
+  inner: Mapper,
+  signatures: Map<string, string> = new Map(),
+): Mapper {
   return {
     toResponse(response: unknown) {
       for (const part of partsOf(response)) {
@@ -96,42 +99,93 @@ export async function retryWhenBusy<T>(
 }
 
 /**
- * Mozaik's model dispatch with the Gemini fix: Gemini models go through one patched endpoint
- * (one signature memory per runner, so use one runner per session); every other model goes to
- * Mozaik's own endpoint unchanged.
+ * Free-tier requests per minute per model, read from Gemini's own 429 answers on 27 Nov
+ * ("quotaValue"). Quotas are per model and per Google project.
+ */
+export const GEMINI_FREE_TIER_REQUESTS_PER_MINUTE: Readonly<Record<string, number>> = {
+  'gemini-3.5-flash-lite': 15,
+  'gemini-3.5-flash': 5,
+};
+
+/**
+ * Hands out items in turn, but always the same one for the same id: each agent loop (one
+ * Mozaik context id) stays on one API key for its whole life, so a thought signature never
+ * travels to a key of another Google project, while new loops spread over all keys.
+ */
+export function createStickyPicker<T>(items: readonly [T, ...T[]]): (id: string) => T {
+  const chosen = new Map<string, T>();
+  let next = 0;
+  return (id) => {
+    const known = chosen.get(id);
+    if (known !== undefined) return known;
+    const item = items[next % items.length] ?? items[0];
+    next++;
+    chosen.set(id, item);
+    return item;
+  };
+}
+
+/**
+ * Mozaik's model dispatch with the Gemini fix: Gemini models go through patched endpoints, one
+ * per API key, sharing one signature memory (so use one runner per session); every other model
+ * goes to Mozaik's own endpoint unchanged.
  */
 export function createGeminiSafeRunner(
   options: {
-    /** Gemini requests per minute per model; 0 or unset means no limit. Free tier: 15. */
-    readonly requestsPerMinute?: number;
+    /**
+     * Gemini requests per minute, per model and per key; 0 or unset means no limit. A function
+     * gives each model its own (see GEMINI_FREE_TIER_REQUESTS_PER_MINUTE).
+     */
+    readonly requestsPerMinute?: number | ((model: string) => number);
+    /**
+     * Gemini API keys, each from a different Google project to add up quotas (two keys of one
+     * project share it). Unset or empty: Mozaik's default, GEMINI_API_KEY from the environment.
+     */
+    readonly apiKeys?: readonly string[];
   } = {},
 ): InferenceRunner {
-  const limiters = new Map<string, RequestLimiter>();
-  const limiterFor = (model: string) => {
+  const perMinute = (model: string) => {
+    const limit = options.requestsPerMinute ?? 0;
+    return typeof limit === 'number' ? limit : limit(model);
+  };
+  const signatures = new Map<string, string>();
+  const endpoint = (apiKey: string | undefined) => {
+    const created = new GeminiGenerateContent(undefined, apiKey === undefined ? {} : { apiKey });
+    created.endpointMapper = keepThoughtSignatures(created.endpointMapper, signatures);
+    return { endpoint: created, limiters: new Map<string, RequestLimiter>() };
+  };
+  const [firstKey, ...moreKeys] = options.apiKeys ?? [];
+  const keyed =
+    firstKey === undefined
+      ? ([endpoint(undefined)] as const)
+      : ([endpoint(firstKey), ...moreKeys.map(endpoint)] as const);
+  const pick = createStickyPicker(keyed);
+
+  const limiterFor = (limiters: Map<string, RequestLimiter>, model: string) => {
     const existing = limiters.get(model);
     if (existing) return existing;
-    const created = createRequestLimiter({ perMinute: options.requestsPerMinute ?? 0 });
+    const created = createRequestLimiter({ perMinute: perMinute(model) });
     limiters.set(model, created);
     return created;
   };
-  const gemini = new GeminiGenerateContent();
-  gemini.endpointMapper = keepThoughtSignatures(gemini.endpointMapper);
-  const endpointFor = (model: string) => {
+  const nonGeminiEndpoint = (model: string) => {
     const supported = supportedModels.find((m) => m.specification.name === model);
     if (!supported) throw new Error(`Unsupported model: ${model}`);
-    return supported.endpoint instanceof GeminiGenerateContent ? gemini : supported.endpoint;
+    return supported.endpoint instanceof GeminiGenerateContent ? undefined : supported.endpoint;
   };
   return {
     // Through a promise, so an unsupported model rejects like a failed call instead of throwing.
     // The limiter is inside the retry, so a retried call waits for a slot like any other.
     run: (input) =>
       retryWhenBusy(async () => {
-        const endpoint = endpointFor(input.model);
-        if (endpoint === gemini) await limiterFor(input.model).acquire();
-        return endpoint.infer(input);
+        const other = nonGeminiEndpoint(input.model);
+        if (other) return other.infer(input);
+        const { endpoint: gemini, limiters } = pick(input.context.id);
+        await limiterFor(limiters, input.model).acquire();
+        return gemini.infer(input);
       }),
     async *stream(input) {
-      yield* endpointFor(input.model).stream(input);
+      yield* (nonGeminiEndpoint(input.model) ?? pick(input.context.id).endpoint).stream(input);
     },
   };
 }
