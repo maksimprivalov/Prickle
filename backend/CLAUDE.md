@@ -39,7 +39,8 @@ checkers per offer and logs disagreements as `review.done`, fix 4b) and the budg
 pays only reviewed passes (`agents/`), and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`)
 exist. Number grounding (fix 1: `core/grounding`, wired in `app/grounding-check.ts`) runs on the
 checkers', the reviewer's and the budget agent's answers.
-`eval` and `dev` are stubs that exit 1. When a folder does not exist
+`pnpm dev` runs the session server (`app/server/`: `POST /api/sessions`, SSE at
+`GET /api/sessions/:id/events`, one session at a time); `eval` is a stub that exits 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
 imports it without our path aliases.
