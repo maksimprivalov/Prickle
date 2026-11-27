@@ -12,7 +12,7 @@
     "eval": "tsx src/app/cli/eval.ts",
     "timing": "tsx src/app/cli/timing.ts",
     "dev": "tsx watch src/app/server/main.ts",
-    "dev:replay": "tsx watch src/app/server/main.ts --replay runs/sample-run.jsonl",
+    "dev:replay": "tsx src/app/server/main.ts --replay runs/sample-run.jsonl",
     "start": "tsx src/app/server/main.ts",
     "gen:data": "tsx scripts/gen-data.ts",
     "wallet:setup": "tsx scripts/wallet-setup.ts",

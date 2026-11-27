@@ -92,8 +92,21 @@ if (settings.STATIC_DIR) {
   console.log(`Serving the page from ${settings.STATIC_DIR}`);
 }
 
-serve({ fetch: app.fetch, port: settings.PORT, hostname: settings.HOST }, (info) => {
+const server = serve({ fetch: app.fetch, port: settings.PORT, hostname: settings.HOST }, (info) => {
   console.log(
     `Prickle session server on http://${settings.HOST}:${info.port} (${mode}). Not financial advice.`,
   );
+});
+// Without this a busy port is an unhandled error that a watcher or a parallel run can bury, and
+// the page only shows "the server answered 502".
+server.on('error', (error: NodeJS.ErrnoException) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(
+      `Port ${settings.PORT} is already in use: another Prickle server (pnpm dev or pnpm dev:replay) ` +
+        `is probably still running. Stop it with Ctrl+C in its terminal, or start this one with PORT=<another port>.`,
+    );
+  } else {
+    console.error('The session server could not start:', error);
+  }
+  process.exit(1);
 });
