@@ -29,9 +29,11 @@ timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
 `pay()` with its guard interceptor (`payments/pay.ts`), the synthetic data (`pnpm gen:data`,
 `data/fixtures/`), the mock stores (`mock-stores/`: `startMockStores()`, or
 `pnpm exec tsx src/mock-stores/main.ts` to browse them) and the store tools (`tools/`:
-`search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) and the five
-scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live with
-`pnpm exec tsx scripts/try-scouts.ts`) exist; `demo`,
+`search_catalog` per store, `store_catalog`, `price_history`, `checkout_total`,
+`store_profile`), the five scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live
+with `pnpm exec tsx scripts/try-scouts.ts`) and the merchant-risk agent (decided in
+`core/risk`, a situation handler on `offer.found` via `agents/react-merchant-risk.ts`; add
+`--merchant-risk` to `try-scouts.ts` to run it live) exist; `demo`,
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend

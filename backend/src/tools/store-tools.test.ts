@@ -8,6 +8,7 @@ import { createCheckoutTotalTool } from './checkout-total';
 import { createPriceHistoryTool } from './price-history';
 import { createSearchCatalogTool } from './search-catalog';
 import type { StoreClient } from './store-client';
+import { createStoreCatalogTool } from './store-catalog';
 import { createStoreProfileTool } from './store-profile';
 
 // The tools against the real mock-store app and the committed fixtures, with no network: the
@@ -190,3 +191,13 @@ function failureReason(result: { ok: true } | { ok: false; reason: string }): st
   if (result.ok) throw new Error('expected the tool to fail');
   return result.reason;
 }
+
+describe('store_catalog', () => {
+  it.each(STORES)('lists every offer of store %s, whatever store it is asked for', async (id) => {
+    const ctx = context();
+    const result = await createStoreCatalogTool(client).run({ storeId: id }, ctx);
+    if (!result.ok) throw new Error(result.reason);
+    expect(plain(result.offers)).toEqual(plain(fixtures.offers.filter((o) => o.storeId === id)));
+    expect(ctx.records.all().map((r) => r.recordId)).toEqual(result.offers.map((o) => o.recordId));
+  });
+});
