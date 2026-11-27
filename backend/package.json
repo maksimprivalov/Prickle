@@ -10,6 +10,7 @@
   "scripts": {
     "demo": "tsx src/app/cli/demo.ts",
     "eval": "tsx src/app/cli/eval.ts",
+    "timing": "tsx src/app/cli/timing.ts",
     "dev": "tsx watch src/app/server/main.ts",
     "gen:data": "tsx scripts/gen-data.ts",
     "wallet:setup": "tsx scripts/wallet-setup.ts",
