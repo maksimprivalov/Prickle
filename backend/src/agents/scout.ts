@@ -14,6 +14,9 @@ export function createScout(storeId: StoreId, client: StoreClient) {
     model: ModelTier.Fast,
     tools: [createSearchCatalogTool(client, storeId)],
     output: ScoutReport,
+    // One search, one more if it found nothing. In live runs scout E kept searching after it
+    // had found the TV, until the loop timed out; the third call is the last one it gets.
+    maxToolCalls: 3,
   });
 }
 

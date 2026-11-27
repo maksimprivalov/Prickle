@@ -58,6 +58,11 @@ export type AgentSpec<O = unknown> = {
   readonly tools: readonly ToolSpec[];
   /** The final answer is parsed with this; a parse failure drops the output. */
   readonly output: z.ZodType<O>;
+  /**
+   * Tool calls one loop of this agent may make before it is told to answer (and, two calls
+   * later, stopped). Overrides the runtime's default. Scouts need one or two searches.
+   */
+  readonly maxToolCalls?: number;
 };
 
 export function defineAgent<O>(spec: AgentSpec<O>): AgentSpec<O> {

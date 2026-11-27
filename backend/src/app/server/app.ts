@@ -15,13 +15,20 @@ import type { SessionHub } from './session-hub';
 
 export const FRONTEND_ORIGIN = 'http://localhost:5173';
 
+/** "live" runs agents on a model; "replay" streams a recorded run, and says so. */
+export type ServerMode = 'live' | 'replay';
+
 const LastEventId = z.coerce.number().int().min(-1).catch(-1);
 
-export function createSessionApp(hub: SessionHub): Hono {
+export function createSessionApp(
+  hub: SessionHub,
+  options: { readonly mode?: ServerMode; readonly origins?: readonly string[] } = {},
+): Hono {
+  const mode = options.mode ?? 'live';
   const app = new Hono();
-  app.use('/api/*', cors({ origin: FRONTEND_ORIGIN }));
+  app.use('/api/*', cors({ origin: [FRONTEND_ORIGIN, ...(options.origins ?? [])] }));
 
-  app.get('/api/health', (c) => c.json({ ok: true }));
+  app.get('/api/health', (c) => c.json({ ok: true, mode }));
 
   app.post('/api/sessions', async (c) => {
     let body: unknown;
@@ -44,7 +51,7 @@ export function createSessionApp(hub: SessionHub): Hono {
         409,
       );
     }
-    return c.json({ sessionId: started.sessionId }, 201);
+    return c.json({ sessionId: started.sessionId, mode }, 201);
   });
 
   app.get('/api/sessions/:id/events', (c) => {

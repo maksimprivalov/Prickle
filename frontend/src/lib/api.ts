@@ -13,15 +13,21 @@ export class ApiError extends Error {
   }
 }
 
-const Started = z.object({ sessionId: z.string().min(1) });
+const Started = z.object({
+  sessionId: z.string().min(1),
+  // "replay" means the server streams a recorded run instead of running agents; older servers
+  // send no mode, which means live.
+  mode: z.enum(['live', 'replay']).default('live'),
+});
+export type StartedSession = z.infer<typeof Started>;
 const ErrorBody = z.object({ error: z.string().min(1) });
 
 export function sessionEventsPath(sessionId: string): string {
   return `/api/sessions/${encodeURIComponent(sessionId)}/events`;
 }
 
-/** POST the mandate; resolves to the new session's id, or throws an ApiError. */
-export async function startSession(mandate: Mandate): Promise<string> {
+/** POST the mandate; resolves to the new session's id and mode, or throws an ApiError. */
+export async function startSession(mandate: Mandate): Promise<StartedSession> {
   let response: Response;
   try {
     response = await fetch('/api/sessions', {
@@ -45,5 +51,5 @@ export async function startSession(mandate: Mandate): Promise<string> {
   }
   const parsed = Started.safeParse(body);
   if (!parsed.success) throw new ApiError(response.status, 'The server sent no session id.');
-  return parsed.data.sessionId;
+  return parsed.data;
 }

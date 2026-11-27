@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import type { Mandate } from '@prickle/backend/contracts';
 import { Disclaimer } from '@components/disclaimer';
-import { startSession } from '@lib/api';
+import { startSession, type StartedSession } from '@lib/api';
 import { MandateFormPanel } from '@features/mandate';
 import { useSessionEvents } from '@features/session';
+import { ReplayBanner } from './replay-banner';
 import { SessionPanels } from './session-panels';
 
 // The one page: the mandate form, then the live session drawn from its event stream.
 export function App() {
-  const [sessionId, setSessionId] = useState<string>();
+  const [session, setSession] = useState<StartedSession>();
+  const sessionId = session?.sessionId;
   const stream = useSessionEvents(sessionId);
   const running = sessionId !== undefined && stream.state !== 'ended' && stream.state !== 'failed';
 
   async function handleStart(mandate: Mandate) {
-    setSessionId(await startSession(mandate));
+    setSession(await startSession(mandate));
   }
 
   return (
@@ -25,6 +27,7 @@ export function App() {
         </p>
       </header>
       <main className="flex flex-col gap-6">
+        {session?.mode === 'replay' ? <ReplayBanner /> : null}
         <MandateFormPanel onStart={handleStart} busy={running} />
         <SessionPanels sessionId={sessionId} stream={stream} />
       </main>

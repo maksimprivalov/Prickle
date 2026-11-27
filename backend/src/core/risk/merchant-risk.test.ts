@@ -54,7 +54,7 @@ describe('merchantRisk', () => {
     expect(result.decision).toBe('pass');
   });
 
-  it("flags Store E: same scarcity label everywhere, no refunds, untrusted", () => {
+  it('flags Store E: same scarcity label everywhere, no refunds, untrusted', () => {
     expect(codesOf('e-tv55')).toEqual(['fake_scarcity', 'no_refund_policy', 'untrusted_store']);
   });
 
@@ -80,9 +80,7 @@ describe('merchantRisk', () => {
   });
 
   it('does not call scarcity fake when one product says something else', () => {
-    const others = storeOffers('e').map((o, i) =>
-      i === 1 ? { ...o, stockLabel: 'In stock' } : o,
-    );
+    const others = storeOffers('e').map((o, i) => (i === 1 ? { ...o, stockLabel: 'In stock' } : o));
     const result = merchantRisk({
       offer: offer('e-tv55'),
       checkout: checkoutOf('e-tv55'),
@@ -128,11 +126,7 @@ describe('merchantRisk', () => {
 
 describe('resolveMerchantRisk', () => {
   const records = new Map<string, unknown>(
-    [
-      ...fixtures.offers,
-      ...fixtures.checkouts,
-      ...fixtures.stores,
-    ].map((r) => [r.recordId, r]),
+    [...fixtures.offers, ...fixtures.checkouts, ...fixtures.stores].map((r) => [r.recordId, r]),
   );
   const lookup = (id: string) => records.get(id);
   const eIds = storeOffers('e').map((o) => o.recordId);
@@ -184,7 +178,12 @@ describe('resolveMerchantRisk', () => {
   it('uses a plain fallback text when the agent explained nothing', () => {
     const result = resolveMerchantRisk({
       offer: offer('e-tv55'),
-      report: { checkout: 'e-tv55-co-1', store: 'e-store-sp-1', storeOffers: eIds, explanations: [] },
+      report: {
+        checkout: 'e-tv55-co-1',
+        store: 'e-store-sp-1',
+        storeOffers: eIds,
+        explanations: [],
+      },
       lookup,
     });
     if (!result.ok) throw new Error(result.detail);

@@ -84,7 +84,12 @@ const demoRun = [
     storeId: 'b',
     total: { amount: 58500, recordId: 'b-tv55-co-1' },
   },
-  { ...base('guard', 8), type: EventName.GuardDecided, offerId: 'b-tv55', decision: { allow: true } },
+  {
+    ...base('guard', 8),
+    type: EventName.GuardDecided,
+    offerId: 'b-tv55',
+    decision: { allow: true },
+  },
   {
     ...base('guard', 8),
     type: EventName.GuardDecided,

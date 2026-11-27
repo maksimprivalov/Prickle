@@ -92,7 +92,7 @@ export function createPlainRuntime<E extends RuntimeEvent, S>(
   ): Promise<LoopResult<O>> {
     let result: LoopResult<O>;
     try {
-      const max = config.maxToolCallsPerLoop ?? 8;
+      const max = agent.maxToolCalls ?? config.maxToolCallsPerLoop ?? 8;
       let calls = 0;
       const answer = await driver({
         agent,

@@ -241,6 +241,23 @@ describe('Mozaik runtime: runaway loops', () => {
     expect(blocked[0]).toMatchObject({ interceptor: 'loop-limit' });
   });
 
+  it("uses the agent's own limit when its spec sets one", async () => {
+    let calls = 0;
+    const { runtime } = setup(
+      model(() => {
+        calls += 1;
+        return Promise.resolve(callTool('catalog', { query: 'tv' }));
+      }),
+      { maxToolCallsPerLoop: 8 },
+    );
+    const scout = defineAgent({ ...agent('scout-e', [catalog]), maxToolCalls: 1 });
+    expect(await runtime.start(scout, 'go').done).toMatchObject({
+      ok: false,
+      detail: 'stopped after 1 tool calls without an answer',
+    });
+    expect(calls).toBe(4);
+  });
+
   it('lets an agent finish when it answers after being told to', async () => {
     const { runtime } = setup(
       model((input) => {

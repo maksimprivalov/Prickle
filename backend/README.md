@@ -164,6 +164,8 @@ runs/              run logs; sample-run.jsonl is committed
 | `pnpm eval` | Every offer through Prickle; trap and timing tables from the log |
 | `pnpm timing [runs/<session>.jsonl]` | The concurrency table and per-loop lanes from a run log (newest by default) |
 | `pnpm dev` | Session server + mock stores, for the frontend |
+| `pnpm dev:replay` | Session server replaying `runs/sample-run.jsonl`: no model, no key, labelled a replay |
+| `pnpm start` | Session server without watch; with `STATIC_DIR=../frontend/dist` it serves the page too ([deploy guide](../docs/deploy.md)) |
 | `pnpm gen:data` | Regenerate `data/fixtures/` from the seeded generator |
 | `pnpm wallet:setup` | Devnet keypair + SOL airdrop |
 | `pnpm check` | typecheck + lint + test |

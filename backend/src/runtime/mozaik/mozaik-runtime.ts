@@ -179,7 +179,7 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
   );
   const prompt = config.loadPrompt ?? loadPrompt;
   const timeoutMs = config.loopTimeoutMs ?? 120_000;
-  const maxToolCalls = config.maxToolCallsPerLoop ?? 8;
+  const defaultMaxToolCalls = config.maxToolCallsPerLoop ?? 8;
   const records: RecordRegistry = createRecordRegistry();
   const interceptors: ToolInterceptor[] = [];
   const loops = createLoopTracker();
@@ -280,6 +280,7 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
 
     const blocked = new Map<string, string>();
     let toolCalls = 0;
+    const maxToolCalls = agent.maxToolCalls ?? defaultMaxToolCalls;
 
     /** Ends the loop at this step: Mozaik runs no further model call for it. */
     const stop = (): ExecutableTransition => ({

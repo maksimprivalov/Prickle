@@ -99,6 +99,8 @@ backend/
 | Eval: every offer through Prickle, trap table from the log | `pnpm eval` |
 | Concurrency table (fix 5) from a run log: wall-clock vs summed loop time | `pnpm timing [runs/<session>.jsonl]` |
 | Session server + mock stores (for the frontend) | `pnpm dev` |
+| Same, replaying `runs/sample-run.jsonl` (no model, no key) | `pnpm dev:replay` |
+| Production: serve the built page too (see `../docs/deploy.md`) | `STATIC_DIR=../frontend/dist pnpm start` |
 | Regenerate synthetic data (seeded) | `pnpm gen:data` |
 | Devnet wallet: keypair in `.wallet/`, SOL airdrop | `pnpm wallet:setup` |
 | Typecheck / lint / unit tests | `pnpm typecheck` / `pnpm lint` / `pnpm test` |
