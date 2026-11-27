@@ -1,5 +1,6 @@
 import { budgetMessage, createBudgetAgent, type Candidate } from '@agents/budget';
 import { startDealVerifier } from '@agents/deal-verifier';
+import { reactMerchantRisk } from '@agents/react-merchant-risk';
 import { startScouts, type ScoutRun } from '@agents/start-scouts';
 import { NOT_FINANCIAL_ADVICE } from '@core/disclaimer/disclaimer';
 import {
@@ -17,7 +18,6 @@ import { createGuardInterceptor, createPayTool, lookupFromRecords } from '@payme
 import type { Wallet } from '@payments/wallet';
 import type { Runtime } from '@runtime/port';
 import type { StoreClient } from '@tools/index';
-import { startInterimMerchantRisk } from './interim-merchant-risk';
 
 // One shopping session, on whichever runtime adapter it is given:
 //   1. five scouts start together; each offer.found wakes the deal verifier and merchant risk,
@@ -105,7 +105,7 @@ export async function runSession(options: {
   // The checkers react to offers as they appear; nobody calls them.
   const onVerdict = (verdict: Verdict) => verdicts.push(verdict);
   startDealVerifier(runtime, { client, clock, onVerdict });
-  const merchantRisk = startInterimMerchantRisk(runtime, { client, clock, onVerdict });
+  const merchantRisk = reactMerchantRisk(runtime, { client, clock, onVerdict });
 
   const paySession = {
     sessionId: runtime.sessionId,
