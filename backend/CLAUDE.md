@@ -34,10 +34,11 @@ timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
 with `pnpm exec tsx scripts/try-scouts.ts`), the deal verifier, the merchant-risk agent
 (decided in `core/risk`, a situation handler on `offer.found` via
 `agents/react-merchant-risk.ts`; if the model fails, the same code decides from the tools
-called directly) and the budget agent (`agents/`), and `pnpm demo` (`app/run-session.ts`,
-`app/cli/demo.ts`) exist. Number grounding (fix 1: `core/grounding`, wired in
-`app/grounding-check.ts`) runs on the checkers' and the budget agent's answers; the reviewer is
-not wired yet.
+called directly), the reviewer (`agents/reviewer.ts`, decision in `core/review`: resolves the two
+checkers per offer and logs disagreements as `review.done`, fix 4b) and the budget agent, which
+pays only reviewed passes (`agents/`), and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`)
+exist. Number grounding (fix 1: `core/grounding`, wired in `app/grounding-check.ts`) runs on the
+checkers', the reviewer's and the budget agent's answers.
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend

@@ -35,15 +35,23 @@ const BudgetMessage = z.object({
       offerId: z.string(),
       checkoutTotal: z.object({ amount: z.number() }).nullable(),
       verdicts: z.array(z.object({ decision: z.string() })),
+      review: z.object({ decision: z.string() }).nullable(),
     }),
   ),
+});
+const ReviewMessage = z.object({
+  offerId: z.string(),
+  verdicts: z.array(z.object({ reasons: z.array(z.object({ sources: z.array(z.string()) })) })),
+  finalDecision: z.string(),
 });
 // A call the guard blocked before pay() ran comes back as { blocked, reason }, without a status.
 const PayResult = z.object({ status: z.string().optional() }).loose();
 
 /** What a sensible model would do, per agent. The budget step tries the cheapest first. */
 const scriptedModel =
-  (options: { budgetIgnoresVerdicts?: boolean; deal?: DealScript } = {}): ModelDriver =>
+  (
+    options: { budgetIgnoresVerdicts?: boolean; deal?: DealScript; reviewText?: string } = {},
+  ): ModelDriver =>
   async ({ agent, message, callTool }) => {
     if (agent.name.startsWith('scout-')) {
       const hit = ScoutHit.safeParse(
@@ -67,6 +75,14 @@ const scriptedModel =
           sources: [offer.recordId],
         }
       );
+    }
+    if (agent.name === 'reviewer') {
+      const review = ReviewMessage.parse(JSON.parse(message));
+      const source = review.verdicts[0]?.reasons[0]?.sources[0] ?? `${review.offerId}-of-1`;
+      return {
+        text: options.reviewText ?? `Reviewed: the offer is ${review.finalDecision}.`,
+        sources: [source],
+      };
     }
     if (agent.name === 'merchant-risk') {
       const offer = OfferMessage.parse(
@@ -94,9 +110,7 @@ const scriptedModel =
       const { candidates } = BudgetMessage.parse(JSON.parse(message));
       const ranked = candidates
         .filter((c) => c.checkoutTotal !== null)
-        .filter(
-          (c) => options.budgetIgnoresVerdicts || c.verdicts.every((v) => v.decision === 'pass'),
-        )
+        .filter((c) => options.budgetIgnoresVerdicts || c.review?.decision === 'pass')
         .sort((a, b) => (a.checkoutTotal?.amount ?? 0) - (b.checkoutTotal?.amount ?? 0));
       for (const candidate of ranked) {
         const result = PayResult.parse(await callTool('pay', { offerId: candidate.offerId }));
@@ -267,6 +281,55 @@ describe('runSession(): the demo mandate', () => {
     const c = result.verdicts.find((v) => v.offerId === 'c-tv55' && v.checker === 'deal-verifier');
     expect(c?.reasons[0]?.text).toBe(
       'On 2026-11-01 it cost €649.00, within the 30 days before the reduction.',
+    );
+  });
+
+  it('reviews every offer once both checkers have judged it, and logs each disagreement', async () => {
+    const { result, events } = await demo(scriptedModel());
+    const byOffer = Object.fromEntries(result.reviews.map((r) => [r.offerId, r]));
+    expect(Object.keys(byOffer).sort()).toEqual(['a-tv55', 'b-tv55', 'c-tv55', 'd-tv55', 'e-tv55']);
+    expect(byOffer['b-tv55']).toMatchObject({ decision: 'pass' });
+    expect(byOffer['b-tv55']?.disagreement).toBeUndefined();
+    // A passes both checks; the guard is what turns it down (€749 > €600).
+    expect(byOffer['a-tv55']).toMatchObject({ decision: 'pass' });
+    expect(byOffer['c-tv55']).toMatchObject({
+      decision: 'reject',
+      disagreement: [
+        { checker: 'deal-verifier', decision: 'reject' },
+        { checker: 'merchant-risk', decision: 'pass' },
+      ],
+    });
+    for (const id of ['d-tv55', 'e-tv55']) {
+      expect(byOffer[id]).toMatchObject({
+        decision: 'reject',
+        disagreement: [
+          { checker: 'deal-verifier', decision: 'pass' },
+          { checker: 'merchant-risk', decision: 'reject' },
+        ],
+      });
+    }
+    expect(byOffer['c-tv55']?.reasons[0]?.text).toBe('Reviewed: the offer is reject.');
+    // Each review comes after both of its verdicts.
+    const at = (test: (e: PrickleEvent) => boolean) => events.findIndex(test);
+    for (const id of Object.keys(byOffer)) {
+      const lastVerdict = Math.max(
+        ...events.flatMap((e, i) =>
+          e.type === 'verdict.ready' && e.verdict.offerId === id ? [i] : [],
+        ),
+      );
+      expect(at((e) => e.type === 'review.done' && e.offerId === id)).toBeGreaterThan(lastVerdict);
+    }
+    expect(result.outcome).toEqual({ kind: 'paid', offerId: 'b-tv55' });
+  });
+
+  it("drops a reviewer explanation with an invented number and keeps the code's wording", async () => {
+    const { result, events } = await demo(scriptedModel({ reviewText: 'It would cost €999.00.' }));
+    expect(
+      events.filter((e) => e.type === 'grounding.rejected' && e.agent === 'reviewer'),
+    ).not.toEqual([]);
+    const c = result.reviews.find((r) => r.offerId === 'c-tv55');
+    expect(c?.reasons[0]?.text).toBe(
+      'The checkers disagree; deal-verifier found fake discount, so the offer is reject.',
     );
   });
 });

@@ -7,11 +7,13 @@ choose which offer to try.
 JSON with the shopper's `mandate` (as they set it) and the `candidates`: each offer's `offerId`,
 `title`, `storeId`, `listPrice`, `checkoutTotal` (the total at checkout, fees included, or null
 when the checkout could not be read) and the checkers' `verdicts` (`pass`, `reject` or
-`unverifiable`, with reason codes). Amounts are in euro cents.
+`unverifiable`, with reason codes), and the reviewer's final `review` (its `decision` and `why`;
+null when no review came). Amounts are in euro cents.
 
 ## How to work
 
-1. Keep the candidates whose verdicts are all `pass` and whose `checkoutTotal` is not null.
+1. Keep the candidates whose `review.decision` is `pass` and whose `checkoutTotal` is not null.
+   A candidate with no review is not payable.
 2. Order them by `checkoutTotal`, lowest first. Compare the totals, never the list prices.
 3. Call `pay` with the first one's `offerId`.
    - `"status": "paid"`: stop. That offer is paid.
@@ -32,11 +34,11 @@ Only a JSON object, with nothing before or after it (no code fence, no prose):
 
 - Only `pay` can pay. Never claim a payment `pay` did not confirm.
 - Call `pay` for one offer at a time, and never again after a `"paid"` answer.
-- Never pay a candidate with a `reject` or `unverifiable` verdict, even if it is the cheapest.
+- Never pay a candidate the review did not pass, even if it is the cheapest.
 
 ## Example (made-up values)
 
-Candidates: `x-tv40` (checkout 31000, all pass) and `y-tv40` (checkout 29000, merchant risk
-`reject`). Call `pay` with `x-tv40`; it answers paid. Answer:
+Candidates: `x-tv40` (checkout 31000, review pass) and `y-tv40` (checkout 29000, review
+reject: merchant risk found a checkout-only fee). Call `pay` with `x-tv40`; it answers paid. Answer:
 
 {"paidOfferId":"x-tv40","note":"Paid the cheapest offer that passed every check; the cheaper one at store Y was rejected for a checkout-only fee."}
