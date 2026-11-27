@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { EventName, PrickleEvent, type VerdictReady } from '@core/events';
 import { Mandate } from '@core/mandate';
 import { Offer } from '@core/offers';
+import type { Verdict } from '@core/verdicts';
 import type { StoreClient } from '@tools/index';
 import { createPlainRuntime, type ModelDriver } from '@runtime/plain/plain-runtime';
 import { createMemoryRunLog } from '@runtime/run-log';
@@ -61,7 +62,7 @@ const honestScout: ModelDriver = async ({ callTool }) => {
   return { matches: result.offers.map((o) => o.recordId), note: 'Searched TVs at 55 inches.' };
 };
 
-async function run(risk: ModelDriver) {
+async function run(risk: ModelDriver, riskClient?: StoreClient) {
   const runtime = createPlainRuntime<PrickleEvent, object>({
     sessionId: 's-test',
     state: {},
@@ -73,9 +74,14 @@ async function run(risk: ModelDriver) {
   const notices: MerchantRiskNotice[] = [];
   runtime.observe('*', (event) => events.push(PrickleEvent.parse(event)));
   const clock = () => new Date('2026-11-27T09:00:00.000Z');
-  reactMerchantRisk(runtime, { client, clock, onNotice: (n) => notices.push(n) });
+  const handler = reactMerchantRisk(runtime, {
+    client: riskClient ?? client,
+    clock,
+    onNotice: (n) => notices.push(n),
+  });
   await startScouts(runtime, { mandate, client, clock });
   await runtime.idle();
+  await handler.settled();
   const verdicts = new Map(
     events
       .filter((e): e is VerdictReady => e.type === EventName.VerdictReady)
@@ -83,6 +89,15 @@ async function run(risk: ModelDriver) {
   );
   return { verdicts, notices };
 }
+
+/** Stands in for a model call that fails, e.g. a 429 from the free LLM tier. */
+const failing: ModelDriver = () => Promise.reject(new Error('429 quota exceeded'));
+
+/** Offer → decision and reason codes, sorted: verdicts arrive in no fixed order. */
+const summary = (verdicts: ReadonlyMap<string, Verdict>) =>
+  [...verdicts.values()]
+    .map((v) => `${v.offerId} ${v.decision} ${v.reasons.map((r) => r.code).join(',')}`)
+    .sort();
 
 describe('reactMerchantRisk', () => {
   it('publishes one merchant-risk verdict per offer found, decided by code', async () => {
@@ -95,7 +110,7 @@ describe('reactMerchantRisk', () => {
     expect(codes('e-tv55')).toEqual(['fake_scarcity', 'no_refund_policy', 'untrusted_store']);
   });
 
-  it('publishes no verdict when the agent names a checkout no tool returned', async () => {
+  it('ignores an agent answer naming a checkout no tool returned, and decides from the tools', async () => {
     const lazy: ModelDriver = async (request) => {
       const answer = z
         .object({ store: z.string() })
@@ -104,6 +119,23 @@ describe('reactMerchantRisk', () => {
       return { ...answer, checkout: 'x-made-up-co-1' };
     };
     const { verdicts, notices } = await run(lazy);
+    expect(notices.filter((n) => n.kind === 'fallback')).toHaveLength(5);
+    expect(verdicts.get('d-tv55')?.reasons.map((r) => r.code)).toEqual(['hidden_fee']);
+  });
+
+  it('still decides every offer when the model call fails (a 429), the same as when it works', async () => {
+    const { verdicts, notices } = await run(failing);
+    const { verdicts: expected } = await run(diligentRisk);
+    expect(notices.map((n) => n.kind)).toEqual(Array(5).fill('fallback'));
+    expect(summary(verdicts)).toEqual(summary(expected));
+  });
+
+  it('publishes no verdict when the store fails as well, so the guard denies', async () => {
+    const down: StoreClient = {
+      baseUrl: 'http://stores.test',
+      fetch: () => Promise.resolve(new Response('down', { status: 503 })),
+    };
+    const { verdicts, notices } = await run(failing, down);
     expect(verdicts.size).toBe(0);
     expect(notices.filter((n) => n.kind === 'no_verdict')).toHaveLength(5);
   });

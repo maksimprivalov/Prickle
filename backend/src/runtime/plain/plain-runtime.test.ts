@@ -257,6 +257,33 @@ describe('plain runtime: tools and interception', () => {
   });
 });
 
+describe('plain runtime: runaway loops', () => {
+  it('stops a driver that keeps calling tools', async () => {
+    const search = defineTool({
+      name: 'search',
+      description: 'Searches.',
+      input: z.object({}),
+      output: z.object({ hits: z.int() }),
+      run: () => Promise.resolve({ hits: 0 }),
+    });
+    const log = createMemoryRunLog();
+    const runtime = createPlainRuntime<TestEvent, null>({
+      sessionId: 's-1',
+      state: null,
+      log,
+      maxToolCallsPerLoop: 3,
+      driver: async ({ callTool }) => {
+        for (;;) await callTool('search', {});
+      },
+    });
+    expect(await runtime.start(agent('scout-c', [search]), 'go').done).toEqual({
+      ok: false,
+      reason: 'failed',
+      detail: 'stopped after 3 tool calls without an answer',
+    });
+  });
+});
+
 describe('plain runtime: run log', () => {
   it('writes lines that parse with the run-log schema, in order', async () => {
     const { runtime, log } = setup(() => Promise.resolve({ text: 'x' }));

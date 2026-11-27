@@ -43,6 +43,8 @@ export type PlainRuntimeConfig<S> = {
   readonly log: RunLog;
   readonly clock?: () => Date;
   readonly checkOutput?: OutputCheck;
+  /** Like the Mozaik adapter: past it the tool says "answer now"; two calls later it throws. */
+  readonly maxToolCallsPerLoop?: number;
 };
 
 export function createPlainRuntime<E extends RuntimeEvent, S>(
@@ -90,11 +92,25 @@ export function createPlainRuntime<E extends RuntimeEvent, S>(
   ): Promise<LoopResult<O>> {
     let result: LoopResult<O>;
     try {
+      const max = config.maxToolCallsPerLoop ?? 8;
+      let calls = 0;
       const answer = await driver({
         agent,
         loopId,
         message,
-        callTool: (name, input) => callTool(agent, loopId, name, input),
+        callTool: (name, input) => {
+          calls += 1;
+          if (calls > max + 2) {
+            return Promise.reject(new Error(`stopped after ${max} tool calls without an answer`));
+          }
+          if (calls > max) {
+            return Promise.resolve({
+              blocked: true,
+              reason: `You have made ${max} tool calls. Do not call tools again: give your final answer now.`,
+            });
+          }
+          return callTool(agent, loopId, name, input);
+        },
       });
       result = settleAnswer(agent, answer, checkOutput, records);
     } catch (error) {

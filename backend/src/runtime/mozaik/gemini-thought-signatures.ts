@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { GeminiGenerateContent, supportedModels, type InferenceRunner } from '@mozaik-ai/core';
+import { createRequestLimiter, type RequestLimiter } from './request-limiter';
 
 // Works around a gap in @mozaik-ai/core 6.0.0: its Gemini mapper drops the `thoughtSignature`
 // Gemini 3 puts on each function-call part, and Gemini then refuses the next turn with 400
@@ -63,7 +64,21 @@ export function keepThoughtSignatures(inner: Mapper): Mapper {
 /** "Overloaded" (503) and "too many requests" (429) pass in seconds; anything else is real. */
 const BUSY = /\b(503|429)\b|UNAVAILABLE|RESOURCE_EXHAUSTED/;
 
-/** Retries a model call that failed because the provider was busy: after 1 s, 2 s, then 4 s. */
+/**
+ * How long the provider asked us to wait, e.g. Gemini's 429 says "Please retry in 2.3s" and
+ * carries "retryDelay":"2s". Undefined when the error says nothing.
+ */
+export function retryDelayMs(message: string): number | undefined {
+  const match =
+    /retry in ([\d.]+)s/i.exec(message) ?? /"retryDelay"\s*:\s*"([\d.]+)s"/.exec(message);
+  const seconds = match?.[1] === undefined ? NaN : Number(match[1]);
+  return Number.isFinite(seconds) ? Math.ceil(seconds * 1000) : undefined;
+}
+
+/**
+ * Retries a model call that failed because the provider was busy: after 1 s, 2 s, then 4 s, or
+ * after the delay the provider asked for when that is longer (at most a minute).
+ */
 export async function retryWhenBusy<T>(
   call: () => Promise<T>,
   wait: (ms: number) => Promise<void> = (ms) => new Promise((done) => setTimeout(done, ms)),
@@ -72,9 +87,10 @@ export async function retryWhenBusy<T>(
     try {
       return await call();
     } catch (error) {
-      const busy = BUSY.test(error instanceof Error ? error.message : String(error));
-      if (!busy || attempt >= 3) throw error;
-      await wait(1000 * 2 ** attempt);
+      const message = error instanceof Error ? error.message : String(error);
+      if (!BUSY.test(message) || attempt >= 3) throw error;
+      const asked = retryDelayMs(message);
+      await wait(Math.min(Math.max(1000 * 2 ** attempt, (asked ?? 0) + 500), 60_000));
     }
   }
 }
@@ -84,7 +100,20 @@ export async function retryWhenBusy<T>(
  * (one signature memory per runner, so use one runner per session); every other model goes to
  * Mozaik's own endpoint unchanged.
  */
-export function createGeminiSafeRunner(): InferenceRunner {
+export function createGeminiSafeRunner(
+  options: {
+    /** Gemini requests per minute per model; 0 or unset means no limit. Free tier: 15. */
+    readonly requestsPerMinute?: number;
+  } = {},
+): InferenceRunner {
+  const limiters = new Map<string, RequestLimiter>();
+  const limiterFor = (model: string) => {
+    const existing = limiters.get(model);
+    if (existing) return existing;
+    const created = createRequestLimiter({ perMinute: options.requestsPerMinute ?? 0 });
+    limiters.set(model, created);
+    return created;
+  };
   const gemini = new GeminiGenerateContent();
   gemini.endpointMapper = keepThoughtSignatures(gemini.endpointMapper);
   const endpointFor = (model: string) => {
@@ -94,8 +123,13 @@ export function createGeminiSafeRunner(): InferenceRunner {
   };
   return {
     // Through a promise, so an unsupported model rejects like a failed call instead of throwing.
+    // The limiter is inside the retry, so a retried call waits for a slot like any other.
     run: (input) =>
-      retryWhenBusy(() => Promise.resolve().then(() => endpointFor(input.model).infer(input))),
+      retryWhenBusy(async () => {
+        const endpoint = endpointFor(input.model);
+        if (endpoint === gemini) await limiterFor(input.model).acquire();
+        return endpoint.infer(input);
+      }),
     async *stream(input) {
       yield* endpointFor(input.model).stream(input);
     },

@@ -210,6 +210,69 @@ describe('Mozaik runtime: loops', () => {
   });
 });
 
+describe('Mozaik runtime: runaway loops', () => {
+  const catalog = defineTool({
+    name: 'catalog',
+    description: 'Lists offers.',
+    input: z.object({ query: z.string() }),
+    output: z.object({ offers: z.array(z.string()) }),
+    run: () => Promise.resolve({ offers: [] }),
+  });
+
+  it('tells an agent that keeps calling tools to answer, then stops its loop', async () => {
+    let calls = 0;
+    const { runtime, log } = setup(
+      model(() => {
+        calls += 1;
+        return Promise.resolve(callTool('catalog', { query: 'tv' }));
+      }),
+      { maxToolCallsPerLoop: 3 },
+    );
+    const result = await runtime.start(agent('scout-c', [catalog]), 'go').done;
+    expect(result).toEqual({
+      ok: false,
+      reason: 'failed',
+      detail: 'stopped after 3 tool calls without an answer',
+    });
+    // 3 calls run, 2 are told to answer, the 6th is stopped before it runs: 6 model calls.
+    expect(calls).toBe(6);
+    const blocked = log.lines().filter((l) => l.kind === 'tool.blocked');
+    expect(blocked).toHaveLength(2);
+    expect(blocked[0]).toMatchObject({ interceptor: 'loop-limit' });
+  });
+
+  it('lets an agent finish when it answers after being told to', async () => {
+    const { runtime } = setup(
+      model((input) => {
+        const output = lastToolOutput(input) ?? '';
+        return Promise.resolve(
+          output.includes('give your final answer now')
+            ? reply({ text: 'answered' })
+            : callTool('catalog', { query: 'tv' }),
+        );
+      }),
+      { maxToolCallsPerLoop: 2 },
+    );
+    expect(ok(await runtime.start(agent('scout-c', [catalog]), 'go').done).text).toBe('answered');
+  });
+
+  it('runs no further model call for a loop that already timed out', async () => {
+    let calls = 0;
+    const { runtime } = setup(
+      model(async () => {
+        calls += 1;
+        await new Promise((done) => setTimeout(done, 40));
+        return callTool('catalog', { query: 'tv' });
+      }),
+      { loopTimeoutMs: 10 },
+    );
+    const result = await runtime.start(agent('scout-c', [catalog]), 'go').done;
+    expect(result).toMatchObject({ ok: false, reason: 'failed' });
+    await new Promise((done) => setTimeout(done, 150));
+    expect(calls).toBe(1);
+  });
+});
+
 describe('Mozaik runtime: events and situation handlers', () => {
   it('starts the reacting agent on each offer and publishes its verdict', async () => {
     const { runtime, log } = setup(

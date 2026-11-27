@@ -102,12 +102,17 @@ if (withMerchantRisk) {
     client,
     clock,
     onNotice: (n) => {
-      if (n.kind === 'no_verdict')
+      if (n.kind === 'no_verdict') {
         riskOutcomes.set(n.offerId, `no verdict: ${shortDetail(n.detail)}`);
-      else
+      } else if (n.kind === 'fallback') {
+        console.log(
+          `  merchant-risk ${n.offerId}: decided without the model (${shortDetail(n.detail)})`,
+        );
+      } else {
         console.log(
           `  merchant-risk ${n.offerId}: model claimed ${n.codes.join(', ')}; code disagreed`,
         );
+      }
     },
   });
 }
