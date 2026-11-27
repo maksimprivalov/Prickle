@@ -8,6 +8,7 @@ import {
   StoreProfile,
   type StoreId,
 } from '@core/offers';
+import { TrapEntry } from '@core/traps';
 
 // The committed synthetic dataset, parsed with the core schemas, for tests. Read-only: the
 // fixtures are generated (pnpm gen:data).
@@ -23,6 +24,7 @@ export const fixtures = {
   history: read('price-history.json', z.array(PriceHistoryRow)),
   checkouts: read('checkouts.json', z.array(CheckoutBreakdown)),
   stores: read('stores.json', z.array(StoreProfile)),
+  traps: read('traps.json', z.array(TrapEntry)),
 };
 
 const find = <T>(items: readonly T[], test: (item: T) => boolean, what: string): T => {

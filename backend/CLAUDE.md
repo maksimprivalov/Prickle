@@ -29,15 +29,16 @@ timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
 `pay()` with its guard interceptor (`payments/pay.ts`), the synthetic data (`pnpm gen:data`,
 `data/fixtures/`), the mock stores (`mock-stores/`: `startMockStores()`, or
 `pnpm exec tsx src/mock-stores/main.ts` to browse them) and the store tools (`tools/`:
-`search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) and the five
-scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live with
-`pnpm exec tsx scripts/try-scouts.ts`), the deal verifier and the budget agent (`agents/`),
-and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`) exist. `pnpm demo` runs on Mozaik
-with the interim plain-code merchant-risk check (`app/interim-merchant-risk.ts`) until Tara's
-merchant-risk agent replaces it. Number grounding (fix 1: `core/grounding`, wired in
-`app/grounding-check.ts`) runs on the checkers', the reviewer's and the budget agent's answers. The reviewer
-(`agents/reviewer.ts`, decision in `core/review`) resolves the two checkers per offer and logs
-disagreements as `review.done` (fix 4b); the budget agent pays only reviewed passes.
+`search_catalog` per store, `store_catalog`, `price_history`, `checkout_total`,
+`store_profile`), the five scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live
+with `pnpm exec tsx scripts/try-scouts.ts`), the deal verifier, the merchant-risk agent
+(decided in `core/risk`, a situation handler on `offer.found` via
+`agents/react-merchant-risk.ts`; if the model fails, the same code decides from the tools
+called directly), the reviewer (`agents/reviewer.ts`, decision in `core/review`: resolves the two
+checkers per offer and logs disagreements as `review.done`, fix 4b) and the budget agent, which
+pays only reviewed passes (`agents/`), and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`)
+exist. Number grounding (fix 1: `core/grounding`, wired in `app/grounding-check.ts`) runs on the
+checkers', the reviewer's and the budget agent's answers.
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend

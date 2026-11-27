@@ -84,6 +84,28 @@ const scriptedModel =
         sources: [source],
       };
     }
+    if (agent.name === 'merchant-risk') {
+      const offer = OfferMessage.parse(
+        JSON.parse(message.split('\n')[0]?.slice('Offer: '.length) ?? ''),
+      );
+      const Rec = z.object({ recordId: z.string() });
+      const id = (out: unknown, key: 'checkout' | 'store') =>
+        key === 'checkout'
+          ? z.object({ checkout: Rec }).parse(out).checkout.recordId
+          : z.object({ store: Rec }).parse(out).store.recordId;
+      const catalog = z
+        .object({ offers: z.array(z.object({ recordId: z.string() })) })
+        .parse(await callTool('store_catalog', { storeId: offer.storeId }));
+      return {
+        checkout: id(
+          await callTool('checkout_total', { storeId: offer.storeId, offerId: offer.offerId }),
+          'checkout',
+        ),
+        store: id(await callTool('store_profile', { storeId: offer.storeId }), 'store'),
+        storeOffers: catalog.offers.map((o) => o.recordId),
+        explanations: [],
+      };
+    }
     if (agent.name === 'budget') {
       const { candidates } = BudgetMessage.parse(JSON.parse(message));
       const ranked = candidates
