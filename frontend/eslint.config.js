@@ -26,9 +26,17 @@ export default tseslint.config(
       'no-restricted-imports': [
         'error',
         {
+          // The bare package is a `paths` entry: as a gitignore-style pattern it would exclude
+          // the whole folder, and the `!contracts` re-include could never apply.
+          paths: [
+            {
+              name: '@prickle/backend',
+              message: 'Only the contracts are shared: import from @prickle/backend/contracts.',
+            },
+          ],
           patterns: [
             {
-              group: ['@prickle/backend', '@prickle/backend/*', '!@prickle/backend/contracts'],
+              group: ['@prickle/backend/*', '!@prickle/backend/contracts'],
               message: 'Only the contracts are shared: import from @prickle/backend/contracts.',
             },
           ],

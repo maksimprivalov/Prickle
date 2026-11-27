@@ -1,9 +1,15 @@
 @import 'tailwindcss';
 
+/* Contrast against surface, light / dark: ink, muted, line, status colours ≥ 4.5:1;
+   on-accent on accent ≥ 4.5:1. */
 @theme {
   --color-surface: #ffffff;
+  --color-panel: #ececee;
   --color-ink: #1a1a1a;
   --color-muted: #5c5c5c;
+  --color-line: #767676;
+  --color-accent: #1d4ed8;
+  --color-on-accent: #ffffff;
   --color-pass: #146c2e;
   --color-reject: #b3261e;
   --color-unverified: #8a5a00;
@@ -12,8 +18,12 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --color-surface: #121212;
+    --color-panel: #26262a;
     --color-ink: #f2f2f2;
     --color-muted: #b0b0b0;
+    --color-line: #8c8c8c;
+    --color-accent: #93c5fd;
+    --color-on-accent: #0b1a33;
     --color-pass: #6fdd8b;
     --color-reject: #ffb4ab;
     --color-unverified: #f5c26b;

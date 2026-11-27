@@ -9,8 +9,10 @@ everything else is in [`../backend/`](../backend/).
 `pnpm demo` is the fallback. So: smallest thing that shows the judges concurrency, sources and
 the guard; no polish that costs an hour.
 
-**Status: scaffolded** (Vite, React, Tailwind v4, Vitest + MSW installed; one placeholder page). Create the rest as
-described rather than inventing different ones; update this file when reality diverges.
+**Status: built** (mandate form, agent timeline, offer cards, guard + spend panel, all from the
+event stream). Panel tests render the recorded runs in `src/test/fixtures/` through the stream
+reducer rather than through MSW's `sse()`: jsdom has no `EventSource`, and Node's clashes with
+jsdom's `Event`. MSW covers `POST /api/sessions`. Update this file when reality diverges.
 
 ## Stack
 
