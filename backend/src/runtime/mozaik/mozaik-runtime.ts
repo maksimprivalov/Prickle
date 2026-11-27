@@ -77,6 +77,12 @@ export type MozaikRuntimeConfig<S> = {
   readonly loadPrompt?: (file: string) => string;
   /** A loop with no answer by then fails, so idle() cannot hang. Default 120 s. */
   readonly loopTimeoutMs?: number;
+  /**
+   * Tool calls one loop may make. Past it the agent is told to answer; two calls later the loop
+   * is stopped. A model that keeps searching would otherwise spend the whole model quota.
+   * Default 8.
+   */
+  readonly maxToolCallsPerLoop?: number;
   /** Replaces the model call. Tests pass a scripted runner; the default is Mozaik's providers. */
   readonly inference?: InferenceRunner;
 };
@@ -166,6 +172,7 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
   );
   const prompt = config.loadPrompt ?? loadPrompt;
   const timeoutMs = config.loopTimeoutMs ?? 120_000;
+  const maxToolCalls = config.maxToolCallsPerLoop ?? 8;
   const records: RecordRegistry = createRecordRegistry();
   const interceptors: ToolInterceptor[] = [];
   const loops = createLoopTracker();
@@ -265,6 +272,43 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
     );
 
     const blocked = new Map<string, string>();
+    let toolCalls = 0;
+
+    /** Ends the loop at this step: Mozaik runs no further model call for it. */
+    const stop = (): ExecutableTransition => ({
+      nextStateId: 'model_message',
+      input: { answer: ModelMessageItem.rehydrate({ text: '' }) },
+    });
+
+    /** Replaces a call's arguments by a marker, so the tool answers with the reason instead. */
+    const block = (
+      transition: Extract<ExecutableTransition, { nextStateId: 'function_call' }>,
+      by: string,
+      reason: string,
+    ): ExecutableTransition => {
+      const original = transition.input.call;
+      write({
+        kind: 'tool.blocked',
+        agent: agent.name,
+        loopId,
+        tool: original.name,
+        interceptor: by,
+        reason,
+      });
+      const token = randomUUID();
+      blocked.set(token, reason);
+      return {
+        nextStateId: 'function_call',
+        input: {
+          ...transition.input,
+          call: FunctionCallItem.rehydrate({
+            callId: original.callId,
+            name: original.name,
+            args: JSON.stringify({ [BLOCKED]: token }),
+          }),
+        },
+      };
+    };
     const tools = agent.tools.map((tool) =>
       toolFor(tool, async (args) => {
         const marker = BlockedArgs.safeParse(args);
@@ -284,12 +328,15 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
 
     const interception: InterceptionHandler = {
       isSatisfiedBy(transition) {
-        if (transition.nextStateId === 'model_message') return true;
-        if (transition.nextStateId !== 'function_call') return false;
-        const call = toolCall(agent, loopId, transition.input.call);
-        return call !== undefined && matchesAny(interceptors, call);
+        // A loop that already ended (timed out, stopped) is stopped at whatever step comes next.
+        if (settled) return true;
+        // Every tool call is counted; every answer is checked.
+        return (
+          transition.nextStateId === 'model_message' || transition.nextStateId === 'function_call'
+        );
       },
       async handle(transition): Promise<ExecutableTransition> {
+        if (settled) return stop();
         if (transition.nextStateId === 'model_message') {
           const failure = failures.get(context.id);
           if (failure !== undefined) {
@@ -301,33 +348,27 @@ export function createMozaikRuntime<E extends RuntimeEvent, S>(
         }
         if (transition.nextStateId !== 'function_call') return transition;
 
-        const call = toolCall(agent, loopId, transition.input.call);
-        if (!call) return transition;
-        const { by, decision } = await decideToolCall(interceptors, call);
-        if (decision.allow) return transition;
+        toolCalls += 1;
+        if (toolCalls > maxToolCalls + 2) {
+          finish({
+            ok: false,
+            reason: LoopFailure.Failed,
+            detail: `stopped after ${maxToolCalls} tool calls without an answer`,
+          });
+          return stop();
+        }
+        if (toolCalls > maxToolCalls) {
+          return block(
+            transition,
+            'loop-limit',
+            `You have made ${maxToolCalls} tool calls. Do not call tools again: give your final answer now.`,
+          );
+        }
 
-        write({
-          kind: 'tool.blocked',
-          agent: agent.name,
-          loopId,
-          tool: call.tool,
-          interceptor: by,
-          reason: decision.reason,
-        });
-        const token = randomUUID();
-        blocked.set(token, decision.reason);
-        const original = transition.input.call;
-        return {
-          nextStateId: 'function_call',
-          input: {
-            ...transition.input,
-            call: FunctionCallItem.rehydrate({
-              callId: original.callId,
-              name: original.name,
-              args: JSON.stringify({ [BLOCKED]: token }),
-            }),
-          },
-        };
+        const call = toolCall(agent, loopId, transition.input.call);
+        if (!call || !matchesAny(interceptors, call)) return transition;
+        const { by, decision } = await decideToolCall(interceptors, call);
+        return decision.allow ? transition : block(transition, by, decision.reason);
       },
     };
 

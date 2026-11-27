@@ -31,7 +31,10 @@ timing table), the plain adapter (`runtime/plain/`) and the Mozaik adapter
 `pnpm exec tsx src/mock-stores/main.ts` to browse them) and the store tools (`tools/`:
 `search_catalog` per store, `price_history`, `checkout_total`, `store_profile`) and the five
 scouts (`agents/scout.ts`, `agents/start-scouts.ts`; try them live with
-`pnpm exec tsx scripts/try-scouts.ts`) exist; `demo`,
+`pnpm exec tsx scripts/try-scouts.ts`), the deal verifier and the budget agent (`agents/`),
+and `pnpm demo` (`app/run-session.ts`, `app/cli/demo.ts`) exist. `pnpm demo` runs on Mozaik
+with the interim plain-code merchant-risk check (`app/interim-merchant-risk.ts`) until Tara's
+merchant-risk agent replaces it; the grounding check (fix 1) and the reviewer are not wired yet.
 `eval` and `dev` are stubs that exit 1. When a folder does not exist
 yet, create it as described here rather than inventing a different one; when reality diverges,
 update this file in the same change. Inside `src/core/`, use relative imports only: the frontend
