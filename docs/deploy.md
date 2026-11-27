@@ -23,7 +23,7 @@ sudo apt-get install -y nodejs git
 sudo corepack enable                      # gives the pnpm version the repo pins
 
 sudo mkdir -p /opt/prickle && sudo chown "$USER" /opt/prickle
-git clone https://github.com/maksimprivalov/black-friday-shopping-agent.git /opt/prickle
+git clone https://github.com/maksimprivalov/Prickle.git /opt/prickle
 cd /opt/prickle
 pnpm install --frozen-lockfile
 pnpm build                                # builds the page into frontend/dist
